@@ -1,0 +1,239 @@
+body {
+    background-color: #121212;
+}
+
+.badge {
+    background: #007bff;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+.alert {
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 5px;
+}
+.alert-info {
+    background: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+.alert-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+.sort-controls {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+.sort-controls label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+.sort-controls select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+}
+
+/* Hamburger Menu Styles */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #e5e7eb;
+    font-size: 20px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+    order: 0;
+    flex-shrink: 0;
+}
+
+.back-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    transform: translateX(-2px);
+}
+
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    padding: 10px;
+    z-index: 1001;
+    margin-left: auto;
+    order: 2;
+}
+
+.hamburger span {
+    width: 20px;
+    height: 2px;
+    background: #666;
+    margin: 2px 0;
+    transition: 0.3s;
+    border-radius: 1px;
+    opacity: 0.7;
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+}
+/* Bakgrund som täcker hela viewporten */
+html, body {
+    height: 100%;
+    background: #121212 !important;
+}
+body {
+    min-height: 100vh;
+    color: #e5e7eb; /* ljus standardtext */
+}
+
+/* Länkar och etiketter */
+a, .nav-links a, label, .form-label, .badge {
+    color: #e5e7eb !important;
+}
+
+/* Form controls i mörkt tema */
+.form-control,
+input[type="text"],
+input[type="password"],
+textarea,
+select {
+    background: #0b1118 !important;
+    border: 1px solid #2a3341 !important;
+    color: #e5e7eb !important;
+}
+.form-control::placeholder { color: #9aa4b2; }
+.form-control:focus {
+    background: #0b1118 !important;
+    color: #ffffff !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 .25rem rgba(59,130,246,.25) !important;
+}
+
+/* Kort info-rutor i mörkt läge */
+.alert-info { background:#0f2530; border-color:#194154; color:#cbe7f3; }
+.alert-warning { background:#2a2412; border-color:#5a4a18; color:#f5e6b2; }
+
+/* Hamburgermenyn – säkerställ kontrast */
+.hamburger span { background:#cbd5e1; opacity:.9; }
+
+/* --- Sortera-efter (select) --- */
+#sortBy {
+    background-color: #0b1118 !important;
+    border: 1px solid #2a3341 !important;
+    border-radius: 6px;
+    padding: 8px 12px;
+    width: 100%;
+
+    /* Ljus text även i stängd select (Chromium/Safari) */
+    color: #f8fafc !important;
+    -webkit-text-fill-color: #f8fafc;   /* <- viktig */
+    text-shadow: none !important;
+    opacity: 1 !important;
+
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    color-scheme: dark;
+}
+
+#sortBy:focus {
+    outline: none;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 .25rem rgba(59,130,246,.25);
+    -webkit-text-fill-color: #ffffff;
+    color: #ffffff !important;
+}
+
+#sortBy option {
+    background-color: #0b1118;
+    color: #e5e7eb;
+}
+
+#sortBy option:hover,
+#sortBy option:checked {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+
+@media (max-width: 768px) {
+    .hamburger {
+        display: flex;
+    }
+    
+    .back-button {
+        order: 0;
+        margin-right: auto;
+    }
+
+    .nav-links {
+        position: absolute;
+        top: 50px; /* justera så det hamnar under hamburgarikonen */
+        right: 10px;
+        order: 1;
+        background: rgba(0, 0, 0, 0.95);
+        border-radius: 10px;
+        padding: 10px 0;
+        width: 200px; /* valfritt, justera efter behov */
+        flex-direction: column;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+    }
+
+    .nav-links.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    .nav-links li {
+        margin: 10px 0;
+    }
+
+    .nav-links a {
+        color: white !important;
+        font-size: 1rem;
+        text-decoration: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        transition: background 0.3s ease;
+    }
+
+    .nav-links a:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}

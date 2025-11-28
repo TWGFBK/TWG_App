@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Profil - TWG{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Min profil</h1>
+    
+    {% if error %}
+    <div class="alert alert-warning">
+        <p>{{ error }}</p>
+    </div>
+    {% endif %}
+    
+    <form method="POST" action="{{ url_for('profile') }}">
+        <div class="grid">
+            <div>
+                <label for="phone">Telefon (t.ex. 3584573435515, inget +):</label>
+                <input type="tel" id="phone" name="phone" value="{{ phone }}" placeholder="3584573435515" pattern="[0-9]+" title="Endast siffror, inget +">
+            </div>
+            <div>
+                <label for="password">Nytt lösenord (lämna tomt för att behålla nuvarande):</label>
+                <input type="text" id="password" name="password" maxlength="4" placeholder="Max 4 tecken">
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <button type="submit" class="primary">Spara ändringar</button>
+            <a href="{{ url_for('home') }}" class="secondary" style="margin-left: 10px;">Avbryt</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

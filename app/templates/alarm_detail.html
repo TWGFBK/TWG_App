@@ -1,0 +1,2595 @@
+{% extends "base.html" %}
+
+{% block title %}Larm - TWG{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='alarm_detail.css') }}?v=2">
+<div class="grid">
+    <div>
+        <article>
+            <header>
+                <h2>
+                    {% if alarm[1] == 'real' %}
+                        {{ alarm[2] or 'Larm' }}
+                    {% elif alarm[1] == 'test' %}
+                        {{ alarm[2] or 'Test' }}
+                    {% else %}
+                        {{ alarm[2] or 'Övning' }}
+                    {% endif %}
+                </h2>
+                <p><strong>Typ:</strong> {{ alarm[1] }}</p>
+                <p><strong>Start:</strong> {{ alarm[3]|format_local('%d/%m/%Y %H:%M') }}</p>
+                {% if alarm[4] %}
+                <p><strong>Slut:</strong> {{ alarm[4]|format_local('%d/%m/%Y %H:%M') }}</p>
+                {% else %}
+                <p><strong>Status:</strong> Aktivt</p>
+                {% endif %}
+                {% if alarm[5] %}
+                <p><strong>Källa:</strong> {{ alarm[5] }}</p>
+                {% endif %}
+            </header>
+        </article>
+        
+        
+        {% if session.is_admin or session.role_07 %}
+        <h2>Lägg till användare manuellt</h2>
+        <article>
+            <div class="search-section">
+                <div class="search-container">
+                    <input type="text" id="user-search" placeholder="Ange namn (t.ex. Robin) eller nummer (t.ex. 52)">
+                    <button id="search-btn" class="btn btn-primary">Lägg till</button>
+                </div>
+                <div id="search-results" class="search-results"></div>
+            </div>
+        </article>
+        {% endif %}
+        
+        <h2>Närvaro</h2>
+        
+        {% for dept in departments %}
+        <article data-dept-id="{{ dept[0] }}" data-dept-code="{{ dept[1] }}">
+            <h3>{{ dept[2] }} ({{ dept[1] }})</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            {% if dept[3] %}
+                <p><strong>Status:</strong> Stängt - {{ dept[3]|format_local('%d/%m/%Y %H:%M') }} | <strong>Totalt:</strong> {{ attendance.get(dept[0], [])|length }} personer</p>
+            {% else %}
+                <p><strong>Status:</strong> Aktivt | <strong>Totalt:</strong> {{ attendance.get(dept[0], [])|length }} personer</p>
+            {% if session.is_admin or session.is_superadmin or session.is_md or session.role_07 %}
+                <button onclick="closeAlarmForDepartment('{{ alarm[0] }}', '{{ dept[0] }}', '{{ dept[1] }}')" class="btn btn-warning btn-sm">
+                Stäng larm för {{ dept[1] }}
+            </button>
+            {% endif %}
+            {% endif %}
+            </div>
+            
+            {% set dept_attendance = attendance.get(dept[0], []) %}
+            {% if dept_attendance %}
+            <div class="attendance-table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Användare</th>
+                        <th>Anmäld</th>
+                        <th>Åtgärder</th>
+                    </tr>
+                </thead>
+                <tbody id="attendance-tbody-{{ dept[0] }}">
+                    {% for attendee in dept_attendance %}
+                    <tr class="attendance-row draggable-row" 
+                        draggable="true"
+                        data-user-id="{{ attendee[0] }}" 
+                        data-user-name="{{ attendee[3] }} {{ attendee[4] }}"
+                        data-user-number="{{ attendee[2] or '' }}"
+                        data-department-id="{{ dept[0] }}"
+                        style="cursor: move; transition: background-color 0.2s;">
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div>{{ attendee[3] }} {{ attendee[4] }}{% if attendee[2] is not none %} ({{ attendee[2] }}){% endif %}</div>
+                                <div class="mantimmar-fields-container" style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+                                    <div style="display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;">
+                                        <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
+                                            <span>INSATS:</span>
+                                            <input type="number" class="mantimmar-insats" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
+                                        </label>
+                                        <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
+                                            <span>BEVAKNING:</span>
+                                            <input type="number" class="mantimmar-bevakning" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
+                                        </label>
+                                        <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
+                                            <span>ÅTERSTÄLLNING:</span>
+                                            <input type="number" class="mantimmar-aterstallning" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
+                                        </label>
+                                    </div>
+                                    <span style="font-size: 0.7em; opacity: 0.8; margin-left: 4px; vertical-align: baseline;">|</span>
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <label style="display: flex; align-items: center; gap: 2px; font-size: 0.7em; margin-right: 12px;">
+                                            <span>AA RÖKDYKNING:</span>
+                                            <input type="radio" name="aa_rokdykning_{{ attendee[0] }}_{{ dept[0] }}" value="true" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" style="margin: 0 2px; vertical-align: middle;">
+                                            <span>Ja</span>
+                                            <input type="radio" name="aa_rokdykning_{{ attendee[0] }}_{{ dept[0] }}" value="false" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" checked style="margin: 0 2px; vertical-align: middle;">
+                                            <span>Nej</span>
+                                            <input type="radio" name="aa_rokdykning_{{ attendee[0] }}_{{ dept[0] }}" value="null" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" style="margin: 0 2px; vertical-align: middle;">
+                                            <span>N/A</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 2px; font-size: 0.7em;">
+                                            <span>AA SJÄLVSKYDD:</span>
+                                            <input type="radio" name="aa_sjalvskydd_{{ attendee[0] }}_{{ dept[0] }}" value="true" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" style="margin: 0 2px; vertical-align: middle;">
+                                            <span>Ja</span>
+                                            <input type="radio" name="aa_sjalvskydd_{{ attendee[0] }}_{{ dept[0] }}" value="false" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" checked style="margin: 0 2px; vertical-align: middle;">
+                                            <span>Nej</span>
+                                            <input type="radio" name="aa_sjalvskydd_{{ attendee[0] }}_{{ dept[0] }}" value="null" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" style="margin: 0 2px; vertical-align: middle;">
+                                            <span>N/A</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ attendee[1]|format_local('%H:%M:%S') }}</td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm remove-attendance" 
+                                    data-user-id="{{ attendee[0] }}" 
+                                    data-department-id="{{ dept[0] }}"
+                                    draggable="false"
+                                    style="padding: 2px 6px; font-size: 0.8rem;">
+                                Ta bort
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% else %}
+                <p>Ingen närvaro registrerad för denna avdelning.</p>
+            {% endif %}
+            
+            <!-- Cars section (only when alarm is closed for this department) -->
+            {% if dept[3] and department_cars.get(dept[0]) %}
+            <div style="margin-top: 20px;">
+                <h4>Fordonstilldelning</h4>
+                <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Dra och släpp användare från tabellen ovan till fordonen nedan.</p>
+                <div class="cars-container" data-dept-id="{{ dept[0] }}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                    {% for car in department_cars[dept[0]] %}
+                    <div class="car-dropzone" data-car-code="{{ car[1] }}" data-dept-id="{{ dept[0] }}"
+                         style="border: 2px dashed #ccc; border-radius: 8px; padding: 15px; min-height: 100px; background: #f9f9f9;">
+                        <h4 style="margin: 0 0 10px 0;">{{ car[1] }}</h4>
+                        <div class="car-users" data-car-code="{{ car[1] }}" style="min-height: 50px;">
+                            <!-- Users will be dropped here -->
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="save-car-assignments btn btn-primary" data-dept-id="{{ dept[0] }}" style="margin-top: 10px; float: right;">
+                    Spara tilldelningar
+                </button>
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
+        
+        <!-- Modal for editing Mantimmar and AA on mobile -->
+        <div id="mantimmar-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+            <div style="background: white; border-radius: 12px; padding: 24px; max-width: 95%; max-height: 90%; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.3); width: 100%; max-width: 420px;">
+                <h3 id="modal-user-name" style="margin-top: 0; margin-bottom: 24px; color: #000; font-size: 1.25rem; font-weight: 600; border-bottom: 2px solid #e0e0e0; padding-bottom: 12px;">Redigera Mantimmar och AA</h3>
+                <div id="modal-content" style="color: #000;">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e0e0e0; justify-content: flex-end;">
+                    <button type="button" id="modal-cancel-btn" class="btn btn-secondary" style="padding: 12px 24px; font-size: 1rem; min-width: 100px;">Avbryt</button>
+                    <button type="button" id="modal-save-btn" class="btn btn-primary" style="padding: 12px 24px; font-size: 1rem; min-width: 100px;">Spara</button>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+        .attendance-row {
+            transition: background-color 0.2s, opacity 0.2s;
+        }
+        
+        .attendance-row.dragging {
+            opacity: 0.5;
+        }
+        
+        table tr.attendance-row.assigned {
+            background-color: #28a745 !important;
+            color: white !important;
+        }
+        
+        table tr.attendance-row.assigned td {
+            background-color: #28a745 !important;
+            color: white !important;
+        }
+        
+        table tr.attendance-row.assigned button {
+            color: white !important;
+        }
+        
+        .car-dropzone.drag-over {
+            border-color: #007bff;
+            background: #e7f3ff;
+            transform: scale(1.02);
+        }
+        
+        /* Mobile responsive styles */
+        @media screen and (max-width: 768px) {
+            /* Ensure modal is hidden by default on mobile */
+            #mantimmar-modal {
+                display: none !important;
+            }
+            
+            /* Hide Mantimmar and AA fields on mobile - show only name, time, and remove button */
+            .attendance-row .mantimmar-fields-container {
+                display: none !important;
+            }
+            
+            /* Make rows clickable on mobile */
+            .attendance-row {
+                cursor: pointer;
+            }
+            
+            .attendance-row:active {
+                background-color: #f0f0f0;
+            }
+            
+            /* Show indicator that row is clickable */
+            .attendance-row td:first-child > div > div:first-child::after {
+                content: " 👆 Tryck för att redigera";
+                font-size: 0.7em;
+                color: #666;
+                margin-left: 8px;
+                display: block;
+                margin-top: 4px;
+            }
+            
+            /* Make table scrollable horizontally on very small screens */
+            .attendance-table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Increase font sizes for better readability */
+            .attendance-row td {
+                font-size: 0.95rem;
+                padding: 12px 8px !important;
+            }
+            
+            /* Make name more prominent */
+            .attendance-row td > div > div:first-child {
+                font-size: 1rem;
+                font-weight: 500;
+            }
+            
+            /* Make remove button larger and easier to tap */
+            .attendance-row .remove-attendance {
+                padding: 10px 16px !important;
+                font-size: 0.9rem !important;
+                min-height: 44px; /* iOS recommended touch target */
+                min-width: 80px;
+            }
+            
+            /* Better spacing for time column */
+            .attendance-row td:nth-child(2) {
+                white-space: nowrap;
+                font-size: 0.9rem;
+                padding: 12px 8px !important;
+            }
+            
+            /* Make car dropzones stack on mobile */
+            .cars-container {
+                grid-template-columns: 1fr !important;
+            }
+            
+            /* Increase car dropzone padding */
+            .car-dropzone {
+                padding: 20px !important;
+                min-height: 120px !important;
+            }
+            
+            /* Make save button full width on mobile */
+            .save-car-assignments {
+                width: 100% !important;
+                float: none !important;
+                margin-top: 15px !important;
+                padding: 12px !important;
+                font-size: 1rem !important;
+            }
+            
+            /* Modal styles for mobile - only show when opened */
+            #mantimmar-modal > div {
+                width: 95%;
+                max-width: 420px;
+            }
+            
+            /* Ensure all modal text is black */
+            #mantimmar-modal,
+            #mantimmar-modal * {
+                color: #000 !important;
+            }
+            
+            #mantimmar-modal h3,
+            #mantimmar-modal h4 {
+                color: #000 !important;
+            }
+            
+            #mantimmar-modal span {
+                color: #000 !important;
+            }
+            
+            /* Make modal inputs larger and easier to tap */
+            #mantimmar-modal input[type="number"] {
+                width: 80px !important;
+                height: 44px !important;
+                font-size: 1rem !important;
+                padding: 8px !important;
+                border: 2px solid #ddd !important;
+                border-radius: 6px !important;
+                color: #000 !important;
+                background: #fff !important;
+            }
+            
+            #mantimmar-modal input[type="radio"] {
+                width: 20px !important;
+                height: 20px !important;
+                cursor: pointer;
+            }
+            
+            #mantimmar-modal label {
+                font-size: 1rem !important;
+                color: #000 !important;
+                cursor: pointer;
+            }
+            
+            #mantimmar-modal label span {
+                color: #000 !important;
+            }
+        }
+        
+        /* Desktop: hide modal by default */
+        @media screen and (min-width: 769px) {
+            #mantimmar-modal {
+                display: none !important;
+            }
+        }
+        
+        .car-users {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .car-user-item {
+            background: #28a745;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .car-user-item .remove-from-car {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: bold;
+            line-height: 1;
+        }
+        
+        .car-user-item .remove-from-car:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        </style>
+        
+        <!-- Edit Alarm Data Section -->
+        {% if session.is_admin or session.role_07 or session.is_superadmin or session.is_md %}
+        <hr>
+        <h2>Redigera larmdata för rapportering</h2>
+        <article>
+            <form id="alarm-edit-form" style="display: grid; gap: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label for="edit_what"><strong>Händelse/objekt *</strong></label>
+                        <input type="text" id="edit_what" name="what" value="{{ alarm[7] or '' }}" 
+                               placeholder="T.ex. Brand i hus" style="width: 100%; padding: 8px;">
+                    </div>
+                    <div>
+                        <label for="edit_where"><strong>Adress *</strong></label>
+                        <input type="text" id="edit_where" name="where_location" value="{{ alarm[8] or '' }}" 
+                               placeholder="T.ex. Storgatan 1" style="width: 100%; padding: 8px;">
+                    </div>
+                </div>
+                
+                <!-- Enhetschef (07) Section -->
+                <div>
+                    <label><strong>Enhetschef (07) *</strong></label>
+            {% if who_was_07_data %}
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                        <input type="text" id="who-was-07-display" 
+                               value="{{ who_was_07_data.first_name }} {{ who_was_07_data.last_name }}{% if who_was_07_data.number %} ({{ who_was_07_data.number }}){% endif %}" 
+                               readonly style="flex: 1; padding: 8px; background: #f0f0f0;">
+                        <input type="hidden" id="who-was-07-user-id" value="">
+                <button type="button" id="clear-who-was-07" class="btn btn-secondary">Rensa</button>
+                        <button type="button" id="edit-who-was-07" class="btn btn-primary">Ändra</button>
+            </div>
+                    {% else %}
+                    <div class="search-section" style="margin-top: 5px;">
+                        <div class="search-container" style="display: flex; gap: 10px;">
+                            <input type="text" id="who-was-07-search" placeholder="Ange namn (t.ex. Robin) eller nummer (t.ex. 52)" autocomplete="off" style="flex: 1; padding: 8px;">
+                    <input type="hidden" id="who-was-07-user-id">
+                    <button type="button" id="save-who-was-07" class="btn btn-primary">Spara 07</button>
+                </div>
+                <div id="who-was-07-results" class="search-results"></div>
+            </div>
+            {% endif %}
+        </div>
+                
+                <!-- Rapportförfattare Section -->
+                <div>
+                    <label><strong>Rapportförfattare *</strong></label>
+                    <div class="search-section" style="margin-top: 5px;">
+                        <div class="search-container" style="display: flex; gap: 10px;">
+                            <input type="text" id="rapportforfattare-search" 
+                                   value="{% if session.first_name %}{{ session.first_name }} {{ session.last_name }}{% endif %}" 
+                                   placeholder="Ange namn (t.ex. Robin) eller nummer (t.ex. 52)" autocomplete="off" style="flex: 1; padding: 8px;">
+                            <input type="hidden" id="rapportforfattare-user-id" value="{{ session.user_id }}">
+                        </div>
+                        <div id="rapportforfattare-results" class="search-results"></div>
+                    </div>
+                </div>
+                
+                <!-- Larmtyp Section -->
+                <div>
+                    <label for="edit_larmtyp"><strong>Larmtyp *</strong></label>
+                    <select id="edit_larmtyp" name="larmtyp" style="width: 100%; padding: 8px;">
+                        <option value="">- Välj ett värde -</option>
+                        <option value="400 Personsökaralarm">400 Personsökaralarm</option>
+                        <option value="401 Personsökaralarm - Hissalarm">401 Personsökaralarm - Hissalarm</option>
+                        <option value="402 Personsökaralarm - Djurräddning">402 Personsökaralarm - Djurräddning</option>
+                        <option value="410 Litet Alarm">410 Litet Alarm</option>
+                        <option value="411 Litet Alarm - Automatalarm">411 Litet Alarm - Automatalarm</option>
+                        <option value="412 Litet Alarm - Byggnadsbrand">412 Litet Alarm - Byggnadsbrand</option>
+                        <option value="413 Litet Alarm - Markbrand">413 Litet Alarm - Markbrand</option>
+                        <option value="414 Litet Alarm - Fordonsbrand">414 Litet Alarm - Fordonsbrand</option>
+                        <option value="415 Litet Alarm - Båtbrand">415 Litet Alarm - Båtbrand</option>
+                        <option value="416 Litet Alarm - Brand i elapparat">416 Litet Alarm - Brand i elapparat</option>
+                        <option value="417 Litet Alarm - Soteld">417 Litet Alarm - Soteld</option>
+                        <option value="418 Litet Alarm - Djurräddning">418 Litet Alarm - Djurräddning</option>
+                        <option value="419 Litet Alarm - Kontrolluppdrag">419 Litet Alarm - Kontrolluppdrag</option>
+                        <option value="420 Grundalarm">420 Grundalarm</option>
+                        <option value="421 Grundalarm - Automatalarm">421 Grundalarm - Automatalarm</option>
+                        <option value="422 Grundalarm - Byggnadsbrand">422 Grundalarm - Byggnadsbrand</option>
+                        <option value="423 Grundalarm - Markbrand">423 Grundalarm - Markbrand</option>
+                        <option value="424 Grundalarm - Fordonsbrand">424 Grundalarm - Fordonsbrand</option>
+                        <option value="425 Grundalarm - Båt-/Fartygsbrand">425 Grundalarm - Båt-/Fartygsbrand</option>
+                        <option value="430 Räddning - Assistans">430 Räddning - Assistans</option>
+                        <option value="431 Räddning - Fastklämd">431 Räddning - Fastklämd</option>
+                        <option value="432 Räddning - Dykalarm">432 Räddning - Dykalarm</option>
+                        <option value="433 Räddning - Kemalarm">433 Räddning - Kemalarm</option>
+                        <option value="440 Förstärkningsalarm">440 Förstärkningsalarm</option>
+                        <option value="441 Beredskapsalarm">441 Beredskapsalarm</option>
+                        <option value="Sjukvård - Första insats">Sjukvård - Första insats</option>
+                        <option value="Övrigt">Övrigt</option>
+                        <option value="Test">Test</option>
+                    </select>
+                </div>
+                
+                <!-- Räddningsledare Section -->
+                <div>
+                    <label for="raddningsledare-select"><strong>Räddningsledare *</strong></label>
+                    <select id="raddningsledare-select" name="raddningsledare" style="width: 100%; padding: 8px;">
+                        <option value="">- Välj ett värde -</option>
+                        <option value="John Anderson">John Anderson</option>
+                        <option value="Sarah Johnson">Sarah Johnson</option>
+                        <option value="Michael Brown">Michael Brown</option>
+                        <option value="Emily Davis">Emily Davis</option>
+                        <option value="David Wilson">David Wilson</option>
+                        <option value="Jourbefäl">Jourbefäl</option>
+                        <option value="Robert Martinez">Robert Martinez</option>
+                        <option value="Lisa Thompson">Lisa Thompson</option>
+                        <option value="James Garcia">James Garcia</option>
+                        <option value="Jennifer Lee">Jennifer Lee</option>
+                        <option value="Christopher White">Christopher White</option>
+                        <option value="Amanda Harris">Amanda Harris</option>
+                        <option value="Matthew Clark">Matthew Clark</option>
+                    </select>
+                    </div>
+                
+                <!-- E-post Section -->
+                <div>
+                    <label for="edit_email"><strong>E-post *</strong></label>
+                    <input type="email" id="edit_email" name="email" value="" 
+                           placeholder="t.ex. namn@example.com" style="width: 100%; padding: 8px;">
+            </div>
+                
+                <!-- Beskrivning av händelse och vidtagna åtgärder (separate comment field) -->
+                <div>
+                    <label for="beskrivning-text"><strong>Beskrivning av händelse och vidtagna åtgärder</strong></label>
+                    <textarea id="beskrivning-text" name="beskrivning" rows="6" 
+                              placeholder="Beskrivning av händelse och vidtagna åtgärder..." 
+                              style="width: 100%; padding: 8px;"></textarea>
+        </div>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                    <button type="button" id="save-all-data" class="btn btn-primary">
+                        Spara ändringar
+                    </button>
+                </div>
+            </form>
+        </article>
+            </form>
+        </article>
+        {% endif %}
+        
+        
+        <hr>
+        
+        <div class="bottom-buttons-container">
+            <div class="bottom-button-left">
+                <a href="{{ url_for('home') }}" role="button" class="secondary">
+                    ← Tillbaka till hem
+                </a>
+            </div>
+            {% if session.is_admin or session.role_07 %}
+            <div class="bottom-button-center">
+                <a href="{{ url_for('admin_alarms') }}" role="button">
+                    Hantera larm
+                </a>
+            </div>
+            {% endif %}
+            <div class="bottom-button-right">
+                <a href="{{ url_for('export_alarm_comprehensive', alarm_id=alarm[0]) }}" 
+                   class="btn btn-primary" style="padding: 10px 20px; font-size: 1.1rem;">
+                    📊 Exportera allt
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('user-search');
+    const searchBtn = document.getElementById('search-btn');
+    const searchResults = document.getElementById('search-results');
+    const alarmId = '{{ alarm[0] }}';
+    const selectedDeptId = {% if selected_dept_id %}parseInt('{{ selected_dept_id }}', 10){% else %}null{% endif %};
+    
+    // Load email from cookie
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+        return null;
+    }
+    
+    const savedEmail = getCookie('alarm_report_email');
+    if (savedEmail) {
+        const emailInput = document.getElementById('edit_email');
+        if (emailInput && !emailInput.value) {
+            emailInput.value = savedEmail;
+        }
+    }
+    
+    // Load existing comment for the selected department
+    function loadExistingComment() {
+        if (!selectedDeptId) return;
+        
+        fetch(`/api/alarm/${alarmId}/comment?dept_id=${selectedDeptId}`, {
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.comment_text) {
+                const commentTextEl = document.getElementById('comment-text');
+                if (commentTextEl) {
+                    commentTextEl.value = data.comment_text;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading existing comment:', error);
+        });
+    }
+    
+    // Load existing comment on page load
+    loadExistingComment();
+    
+    // Get alarm departments from the page data
+    const alarmDepartments = [];
+    document.querySelectorAll('[data-dept-code]').forEach(element => {
+        alarmDepartments.push(element.getAttribute('data-dept-code'));
+    });
+    
+    // Search for user
+    function searchUser() {
+        const searchTerm = searchInput.value.trim();
+        if (!searchTerm) {
+            searchResults.innerHTML = '<p class="error">Ange ett namn eller ID</p>';
+            return;
+        }
+        
+        searchResults.innerHTML = '<p>Söker...</p>';
+        
+        // Search by name or department number
+        fetch(`/api/search-user-by-name?q=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    searchResults.innerHTML = `<p class="error">${data.error}</p>`;
+                } else if (data.users && data.users.length > 0) {
+                    // Always show search results, don't auto-add
+                    displayUserResults(data.users);
+                } else {
+                    searchResults.innerHTML = '<p class="error">Inga användare hittades</p>';
+                }
+            })
+            .catch(error => {
+                searchResults.innerHTML = '<p class="error">Nätverksfel vid sökning</p>';
+                console.error('Search error:', error);
+            });
+    }
+    
+    function getDepartmentNumberForUser(user) {
+        // Get department number for the selected department
+        if (user.numbers && selectedDeptId) {
+            return user.numbers[selectedDeptId] || null;
+        }
+        return null;
+    }
+    
+    // Display search results (both single and multiple)
+    function displayUserResults(users) {
+        let resultsHtml = '<div class="search-results-list">';
+        users.forEach(user => {
+            const userDepartments = user.department_codes || [];
+            const relevantDepartments = userDepartments.filter(dept => 
+                alarmDepartments.includes(dept)
+            );
+            
+            // Get department number for the selected department
+            const deptNumber = getDepartmentNumberForUser(user);
+            const displayName = `${user.first_name} ${user.last_name}${deptNumber ? ` (${deptNumber})` : ''}`;
+            
+            // Get department numbers for display
+            const departmentNumbers = user.numbers || {};
+            const departmentInfo = userDepartments.map(dept => {
+                const deptId = user.departments[userDepartments.indexOf(dept)];
+                const number = departmentNumbers[deptId];
+                return number ? `${dept} (${number})` : dept;
+            }).join(', ');
+            
+            resultsHtml += `
+                <div class="user-result" 
+                     data-user-id="${user.id}" 
+                     data-first-name="${user.first_name || ''}" 
+                     data-last-name="${user.last_name || ''}"
+                     style="cursor: pointer; padding: 10px; border: 1px solid #ccc; margin: 5px 0; border-radius: 4px;">
+                    <div class="user-info">
+                        <h4>${displayName}</h4>
+                        <p>Avdelningar: ${departmentInfo || 'Inga'}</p>
+                        <p>RD: ${user.is_rd ? 'Ja' : 'Nej'} | 07: ${user.role_07 ? 'Ja' : 'Nej'}</p>
+                    </div>
+                </div>
+            `;
+        });
+        resultsHtml += '</div>';
+        
+        searchResults.innerHTML = resultsHtml;
+        searchResults.style.display = 'block';
+        
+        // Add click handlers to results
+        searchResults.querySelectorAll('.user-result').forEach(result => {
+            result.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                const firstName = this.getAttribute('data-first-name');
+                const lastName = this.getAttribute('data-last-name');
+                addManualAttendance(userId, firstName, lastName);
+            });
+        });
+    }
+    
+    // Display single search result
+    function displayUserResult(user) {
+        const userDepartments = user.department_codes || [];
+        const isInMyDepartments = user.in_my_departments || false;
+        
+        // Filter user departments to only show those relevant to this alarm
+        const relevantDepartments = userDepartments.filter(dept => 
+            alarmDepartments.includes(dept)
+        );
+        
+        // Get department number for the selected department
+        const deptNumber = getDepartmentNumberForUser(user);
+        const displayName = `${user.first_name} ${user.last_name}${deptNumber ? ` (${deptNumber})` : ''}`;
+        
+        // Get department numbers for display
+        const departmentNumbers = user.numbers || {};
+        const departmentInfo = userDepartments.map(dept => {
+            const deptId = user.departments[userDepartments.indexOf(dept)];
+            const number = departmentNumbers[deptId];
+            return number ? `${dept} (${number})` : dept;
+        }).join(', ');
+        
+        let departmentOptions = '';
+        if (relevantDepartments.length > 0) {
+            departmentOptions = `
+                <div class="department-selection">
+                    <h4>Välj avdelning för närvaro:</h4>
+                    ${relevantDepartments.map(dept => `
+                        <label>
+                            <input type="checkbox" name="departments" value="${dept}" checked>
+                            ${dept}
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            departmentOptions = `
+                <div class="department-selection">
+                    <p class="error">Användaren tillhör inga avdelningar som är kopplade till detta larm.</p>
+                </div>
+            `;
+        }
+        
+        searchResults.innerHTML = `
+            <div class="user-result">
+                <div class="user-info">
+                    <h4>${displayName}</h4>
+                    <p>Avdelningar: ${departmentInfo || 'Inga'}</p>
+                    <p>RD: ${user.is_rd ? 'Ja' : 'Nej'} | 07: ${user.role_07 ? 'Ja' : 'Nej'}</p>
+                </div>
+                <div>
+                    ${relevantDepartments.length > 0 ? 
+                        `<button class="btn btn-success manual-add-btn" 
+                                data-user-id="${user.id}" 
+                                data-first-name="${user.first_name || ''}" 
+                                data-last-name="${user.last_name || ''}">
+                            Lägg till närvaro
+                        </button>` :
+                        '<span class="text-muted">Användaren tillhör inga avdelningar för detta larm</span>'
+                    }
+                </div>
+            </div>
+            ${departmentOptions}
+        `;
+    }
+    
+    // Add manual attendance directly
+    function addManualAttendance(userId, firstName, lastName) {
+        // Use the selected department from the session
+        if (!selectedDeptId) {
+            alert('Ingen avdelning vald');
+            return;
+        }
+        
+        // Show loading state (if button exists)
+        const button = event ? event.target : null;
+        if (button) {
+            button.textContent = 'Lägger till...';
+            button.disabled = true;
+        }
+            
+            const formData = new FormData();
+            formData.append('arrival_time', '0'); // Always "På plats"
+            formData.append('comment', ''); // No comment
+            formData.append('user_id', userId);
+            
+        fetch(`/admin/manual-attendance/${alarmId}/${selectedDeptId}`, {
+                method: 'POST',
+                body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                // Clear search field and results for next search
+                searchInput.value = '';
+                searchResults.innerHTML = '';
+                searchResults.style.display = 'none';
+                
+                // Update attendance list dynamically
+                updateAttendanceList();
+                
+                // Keep focus on search input for continuous adding
+                setTimeout(() => {
+                    searchInput.focus();
+                }, 100);
+                } else {
+                response.text().then(text => {
+                    console.error('Error response:', text);
+                    alert('Fel vid tillägg av närvaro: ' + text);
+                });
+                if (button) {
+                    button.textContent = 'Lägg till närvaro';
+                    button.disabled = false;
+                }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Nätverksfel');
+            if (button) {
+                button.textContent = 'Lägg till närvaro';
+                button.disabled = false;
+            }
+            });
+    }
+    
+    // Event listener for manual attendance buttons
+    searchResults.addEventListener('click', function(event) {
+        if (event.target.classList.contains('manual-add-btn')) {
+            const button = event.target;
+            const userId = button.getAttribute('data-user-id');
+            const firstName = button.getAttribute('data-first-name');
+            const lastName = button.getAttribute('data-last-name');
+            addManualAttendance(userId, firstName, lastName);
+        }
+    });
+    
+    // Update attendance list dynamically
+    function updateAttendanceList() {
+        fetch(`/api/alarm/${alarmId}/attendance?dept_id=${selectedDeptId}`, {
+            credentials: 'same-origin'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.attendance) {
+                    // Find the table for the selected department
+                    const deptArticle = document.querySelector(`article[data-dept-id="${selectedDeptId}"]`);
+                    
+                    if (deptArticle) {
+                        const attendanceTable = deptArticle.querySelector('table tbody');
+                        
+                        if (attendanceTable) {
+                            attendanceTable.innerHTML = '';
+                            data.attendance.forEach(attendee => {
+                                const row = document.createElement('tr');
+                                row.className = 'attendance-row draggable-row';
+                                row.setAttribute('draggable', 'true');
+                                row.setAttribute('data-user-id', attendee[0]);
+                                row.setAttribute('data-user-name', `${attendee[3]} ${attendee[4]}`);
+                                row.setAttribute('data-user-number', attendee[2] || '');
+                                row.setAttribute('data-department-id', selectedDeptId);
+                                row.style.cssText = 'cursor: move; transition: background-color 0.2s;';
+                                
+                                const name = `${attendee[3]} ${attendee[4]}`;
+                                const number = attendee[2] ? ` (${attendee[2]})` : '';
+                                const time = attendee[1] ? new Date(attendee[1]).toLocaleTimeString('sv-SE', {hour: '2-digit', minute: '2-digit', second: '2-digit'}) : '';
+                                const userId = attendee[0];
+                                const deptId = selectedDeptId;
+                                
+                                row.innerHTML = `
+                                    <td>
+                                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                                            <div>${name}${number}</div>
+                                            <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+                                                <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
+                                                    <span>INSATS:</span>
+                                                    <input type="number" class="mantimmar-insats" data-user-id="${userId}" data-dept-id="${deptId}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
+                                                </label>
+                                                <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
+                                                    <span>BEVAKNING:</span>
+                                                    <input type="number" class="mantimmar-bevakning" data-user-id="${userId}" data-dept-id="${deptId}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
+                                                </label>
+                                                <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
+                                                    <span>ÅTERSTÄLLNING:</span>
+                                                    <input type="number" class="mantimmar-aterstallning" data-user-id="${userId}" data-dept-id="${deptId}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
+                                                </label>
+                                                <span style="font-size: 0.7em; opacity: 0.8; margin-left: 4px; vertical-align: baseline;">|</span>
+                                                <label style="display: flex; align-items: center; gap: 2px; font-size: 0.7em; margin-right: 12px;">
+                                                    <span>AA RÖKDYKNING:</span>
+                                                    <input type="radio" name="aa_rokdykning_${userId}_${deptId}" value="true" data-user-id="${userId}" data-dept-id="${deptId}" style="margin: 0 2px; vertical-align: middle;">
+                                                    <span>Ja</span>
+                                                    <input type="radio" name="aa_rokdykning_${userId}_${deptId}" value="false" data-user-id="${userId}" data-dept-id="${deptId}" checked style="margin: 0 2px; vertical-align: middle;">
+                                                    <span>Nej</span>
+                                                    <input type="radio" name="aa_rokdykning_${userId}_${deptId}" value="null" data-user-id="${userId}" data-dept-id="${deptId}" style="margin: 0 2px; vertical-align: middle;">
+                                                    <span>N/A</span>
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: 2px; font-size: 0.7em;">
+                                                    <span>AA SJÄLVSKYDD:</span>
+                                                    <input type="radio" name="aa_sjalvskydd_${userId}_${deptId}" value="true" data-user-id="${userId}" data-dept-id="${deptId}" style="margin: 0 2px; vertical-align: middle;">
+                                                    <span>Ja</span>
+                                                    <input type="radio" name="aa_sjalvskydd_${userId}_${deptId}" value="false" data-user-id="${userId}" data-dept-id="${deptId}" checked style="margin: 0 2px; vertical-align: middle;">
+                                                    <span>Nej</span>
+                                                    <input type="radio" name="aa_sjalvskydd_${userId}_${deptId}" value="null" data-user-id="${userId}" data-dept-id="${deptId}" style="margin: 0 2px; vertical-align: middle;">
+                                                    <span>N/A</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>${time}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm remove-attendance" 
+                                                data-user-id="${userId}" 
+                                                data-department-id="${deptId}"
+                                                draggable="false"
+                                                style="padding: 2px 6px; font-size: 0.8rem;"
+                                                onclick="removeAttendance('${userId}', '${deptId}')">Ta bort</button>
+                                    </td>
+                                `;
+                                attendanceTable.appendChild(row);
+                                
+                                // Setup drag events AFTER innerHTML is set (since innerHTML removes event listeners)
+                                // Mark as set up to prevent duplicates
+                                row.setAttribute('data-drag-setup', 'true');
+                                row.setAttribute('draggable', 'true');
+                                row.querySelectorAll('button').forEach(btn => {
+                                    btn.setAttribute('draggable', 'false');
+                                });
+                                
+                                row.addEventListener('dragstart', function(e) {
+                                    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        return false;
+                                    }
+                                    const userId = this.getAttribute('data-user-id');
+                                    if (!userId) {
+                                        e.preventDefault();
+                                        return false;
+                                    }
+                                    this.classList.add('dragging');
+                                    e.dataTransfer.effectAllowed = 'move';
+                                    e.dataTransfer.setData('text/plain', userId);
+                                });
+                                
+                                row.addEventListener('dragend', function(e) {
+                                    this.classList.remove('dragging');
+                                    document.querySelectorAll('.car-dropzone').forEach(zone => zone.classList.remove('drag-over'));
+                                });
+                            });
+                            
+                            // Setup drag and drop for all newly added rows
+                            setupRowDragAndDrop();
+                        }
+                        
+                        // Update total count for this department
+                        const totalElement = deptArticle.querySelector('p strong');
+                        if (totalElement && totalElement.parentElement) {
+                            totalElement.parentElement.textContent = `Totalt: ${data.attendance.length} personer`;
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error updating attendance list:', error);
+            });
+    }
+    
+    // Event listeners for real-time search like Vem var 07
+    if (searchInput) {
+        // Real-time search as you type (like Vem var 07)
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const searchTerm = this.value.trim();
+            
+            if (searchTerm.length < 2) {
+                searchResults.innerHTML = '';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/search-user-by-name?q=${encodeURIComponent(searchTerm)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.users && data.users.length > 0) {
+                            if (data.users.length === 1 && /^\d+$/.test(searchTerm)) {
+                                // Auto-add if it's a number and only one result
+                                const user = data.users[0];
+                                addManualAttendance(user.id, user.first_name, user.last_name);
+                            } else {
+                                // Show search results
+                                displayUserResults(data.users);
+                            }
+                        } else {
+                            searchResults.innerHTML = '<p>Inga användare hittades</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        searchResults.innerHTML = '<p>Fel vid sökning</p>';
+                    });
+            }, 300);
+        });
+        
+        // Hide results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+        
+        // Enter key for manual search
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+                searchUser();
+            }
+        });
+    }
+    
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+            searchUser();
+        });
+    }
+    
+    // Comment form handling
+    const commentForm = document.getElementById('comment-form');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const commentText = document.getElementById('comment-text').value.trim();
+            if (!commentText) {
+                alert('Vänligen skriv en kommentar');
+                return;
+            }
+            
+            if (!selectedDeptId) {
+                alert('Fel: Ingen avdelning vald. Vänligen välj en avdelning först.');
+                return;
+            }
+            
+            const submitButton = commentForm.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.textContent = 'Sparar...';
+            submitButton.disabled = true;
+            
+            fetch('/api/alarm-comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    alarm_id: '{{ alarm[0] }}',
+                    comment: commentText,
+                    department_id: selectedDeptId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Display the saved comment in the input field
+                    document.getElementById('comment-text').value = data.comment_text || '';
+                    
+                    // Show success message briefly
+                    const originalText = submitButton.textContent;
+                    submitButton.textContent = 'Sparad!';
+                    setTimeout(() => {
+                        submitButton.textContent = originalText;
+                    }, 1000);
+                } else {
+                    alert('Fel: ' + (data.error || 'Okänt fel'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Nätverksfel');
+            })
+            .finally(() => {
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            });
+        });
+    }
+    
+    // Comments are now only displayed in the input field
+    
+    // Close alarm for specific department
+    window.closeAlarmForDepartment = function(alarmId, departmentId, departmentCode) {
+        if (!departmentId) {
+            alert('Fel: Avdelnings-ID saknas. Kan inte stänga larm.');
+            return;
+        }
+        
+        if (!confirm(`Är du säker på att du vill stänga detta larm för ${departmentCode}?`)) {
+            return;
+        }
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/alarms';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'close';
+        form.appendChild(actionInput);
+        
+        const alarmIdInput = document.createElement('input');
+        alarmIdInput.type = 'hidden';
+        alarmIdInput.name = 'alarm_id';
+        alarmIdInput.value = alarmId;
+        form.appendChild(alarmIdInput);
+        
+        const deptIdInput = document.createElement('input');
+        deptIdInput.type = 'hidden';
+        deptIdInput.name = 'department_id';
+        deptIdInput.value = String(departmentId);
+        form.appendChild(deptIdInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    };
+    
+    // Remove attendance functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-attendance')) {
+            const button = e.target;
+            const userId = button.getAttribute('data-user-id');
+            const departmentId = button.getAttribute('data-department-id');
+            
+            button.textContent = 'Tar bort...';
+            button.disabled = true;
+            
+            fetch(`/api/alarm/{{ alarm[0] }}/remove-attendance`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    user_id: userId,
+                    department_id: departmentId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the row from the table
+                    button.closest('tr').remove();
+                    // Update the total count
+                    const article = button.closest('article');
+                    if (article) {
+                        const totalElement = article.querySelector('p strong');
+                        if (totalElement) {
+                            const currentTotal = parseInt(totalElement.textContent.match(/\d+/)[0]);
+                            totalElement.textContent = `Totalt: ${currentTotal - 1} personer`;
+                        }
+                    }
+                } else {
+                    alert('Fel: ' + (data.error || 'Okänt fel'));
+                    button.textContent = 'Ta bort';
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Nätverksfel');
+                button.textContent = 'Ta bort';
+                button.disabled = false;
+            });
+        }
+    });
+    
+    // Who was 07 functionality
+    const whoWas07Search = document.getElementById('who-was-07-search');
+    const whoWas07UserId = document.getElementById('who-was-07-user-id');
+    const whoWas07Results = document.getElementById('who-was-07-results');
+    const saveWhoWas07Btn = document.getElementById('save-who-was-07');
+    const clearWhoWas07Btn = document.getElementById('clear-who-was-07');
+    
+    if (whoWas07Search) {
+        // Search functionality for who was 07
+        let searchTimeout;
+        whoWas07Search.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const searchTerm = this.value.trim();
+            
+            // Allow single-digit numbers, but require at least 2 characters for text searches
+            const isNumberSearch = /^\d+$/.test(searchTerm);
+            if (!isNumberSearch && searchTerm.length < 2) {
+                whoWas07Results.innerHTML = '';
+                whoWas07UserId.value = ''; // Clear user ID when typing manually
+                return;
+            }
+            
+            if (searchTerm.length === 0) {
+                whoWas07Results.innerHTML = '';
+                whoWas07UserId.value = ''; // Clear user ID when typing manually
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/search-user-by-name?q=${encodeURIComponent(searchTerm)}`, {
+                    credentials: 'same-origin'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.users && data.users.length > 0) {
+                            if (data.users.length === 1 && /^\d+$/.test(searchTerm)) {
+                                // Auto-add if it's a number and only one result
+                                const user = data.users[0];
+                                saveWhoWas07WithUser(user);
+                            } else {
+                                // Show search results
+                                displayWhoWas07Results(data.users);
+                            }
+                        } else {
+                            whoWas07Results.innerHTML = '<p>Inga användare hittades - använd som manuellt namn</p>';
+                            whoWas07Results.style.display = 'block';
+                            whoWas07UserId.value = ''; // Clear user ID for manual entry
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        whoWas07Results.innerHTML = '<p>Fel vid sökning</p>';
+                        whoWas07Results.style.display = 'block';
+                        whoWas07UserId.value = ''; // Clear user ID on error
+                    });
+            }, 300);
+        });
+        
+        // Hide results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (whoWas07Results && !whoWas07Search.contains(e.target) && !whoWas07Results.contains(e.target)) {
+                whoWas07Results.style.display = 'none';
+            }
+        });
+        
+        // Save button handler
+        if (saveWhoWas07Btn) {
+            saveWhoWas07Btn.addEventListener('click', function() {
+                const userId = whoWas07UserId ? whoWas07UserId.value : '';
+                const searchValue = whoWas07Search ? whoWas07Search.value.trim() : '';
+                
+                if (!searchValue) {
+                    alert('Ange ett namn eller välj en användare');
+                    return;
+                }
+                
+                const button = this;
+                const originalText = button.textContent;
+                button.textContent = 'Sparar...';
+                button.disabled = true;
+                
+                fetch(`/api/alarm/{{ alarm[0] }}/who-was-07`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        user_id: userId || null,
+                        name: userId ? null : searchValue
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Fel: ' + (data.error || 'Okänt fel'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Nätverksfel');
+                })
+                .finally(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                });
+            });
+        }
+    }
+    
+    // Function to initialize who was 07 search (for dynamic elements)
+    function initializeWhoWas07Search() {
+        const searchEl = document.getElementById('who-was-07-search');
+        const userIdEl = document.getElementById('who-was-07-user-id');
+        const resultsEl = document.getElementById('who-was-07-results');
+        const btnEl = document.getElementById('save-who-was-07');
+        
+        if (!searchEl) return; // Element doesn't exist yet
+        
+        // Remove old listeners by cloning and replacing
+        const newSearchEl = searchEl.cloneNode(true);
+        searchEl.parentNode.replaceChild(newSearchEl, searchEl);
+        
+        let searchTimeout;
+        newSearchEl.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const searchTerm = this.value.trim();
+            
+            const isNumberSearch = /^\d+$/.test(searchTerm);
+            if (!isNumberSearch && searchTerm.length < 2) {
+                if (resultsEl) resultsEl.innerHTML = '';
+                if (userIdEl) userIdEl.value = '';
+                return;
+            }
+            
+            if (searchTerm.length === 0) {
+                if (resultsEl) resultsEl.innerHTML = '';
+                if (userIdEl) userIdEl.value = '';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/search-user-by-name?q=${encodeURIComponent(searchTerm)}`, {
+                    credentials: 'same-origin'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.users && data.users.length > 0) {
+                            if (data.users.length === 1 && /^\d+$/.test(searchTerm)) {
+                                const user = data.users[0];
+                                saveWhoWas07WithUser(user);
+                            } else {
+                                displayWhoWas07Results(data.users);
+                            }
+                        } else {
+                            if (resultsEl) {
+                                resultsEl.innerHTML = '<p>Inga användare hittades - använd som manuellt namn</p>';
+                                resultsEl.style.display = 'block';
+                            }
+                            if (userIdEl) userIdEl.value = '';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        if (resultsEl) {
+                            resultsEl.innerHTML = '<p>Fel vid sökning</p>';
+                            resultsEl.style.display = 'block';
+                        }
+                        if (userIdEl) userIdEl.value = '';
+                    });
+            }, 300);
+        });
+        
+        if (btnEl) {
+            btnEl.addEventListener('click', function() {
+                const userId = userIdEl ? userIdEl.value : '';
+                const searchValue = newSearchEl ? newSearchEl.value.trim() : '';
+                
+                if (!searchValue) {
+                    alert('Ange ett namn eller välj en användare');
+                    return;
+                }
+                
+                const button = this;
+                const originalText = button.textContent;
+                button.textContent = 'Sparar...';
+                button.disabled = true;
+                
+                fetch(`/api/alarm/{{ alarm[0] }}/who-was-07`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        user_id: userId || null,
+                        name: userId ? null : searchValue
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Fel: ' + (data.error || 'Okänt fel'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Nätverksfel');
+                })
+                .finally(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                });
+            });
+        }
+    }
+    
+    // Initialize who was 07 search on page load
+    initializeWhoWas07Search();
+    
+    function getDepartmentNumber(user) {
+        // Get department number for the selected department
+        if (user.numbers && selectedDeptId) {
+            return user.numbers[selectedDeptId] || null;
+        }
+        return null;
+    }
+    
+    function displayWhoWas07Results(users) {
+        if (users.length === 1) {
+            // Auto-select if only one result
+            const user = users[0];
+            const deptNumber = getDepartmentNumber(user);
+            whoWas07Search.value = `${user.first_name} ${user.last_name}${deptNumber ? ` (${deptNumber})` : ''}`;
+            whoWas07UserId.value = user.id;
+            whoWas07Results.innerHTML = '';
+            whoWas07Results.style.display = 'none';
+        } else {
+            // Show multiple results with department numbers
+            whoWas07Results.innerHTML = users.map(user => {
+                const deptNumber = getDepartmentNumber(user);
+                const displayName = `${user.first_name} ${user.last_name}${deptNumber ? ` (${deptNumber})` : ''}`;
+                return `
+                    <div class="user-result" data-user-id="${user.id}" data-user-name="${user.first_name} ${user.last_name}">
+                        <h4>${displayName}</h4>
+                        <p>Avdelningar: ${user.department_codes ? user.department_codes.join(', ') : 'Inga'}</p>
+                    </div>
+                `;
+            }).join('');
+            
+            whoWas07Results.style.display = 'block';
+        }
+        
+        // Add click handlers to results
+        whoWas07Results.querySelectorAll('.user-result').forEach(result => {
+            result.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                const userName = this.getAttribute('data-user-name');
+                
+                // Find the user data to get department number
+                const user = users.find(u => u.id === userId);
+                if (user) {
+                    saveWhoWas07WithUser(user);
+                } else {
+                    // Fallback to old method if user data not found
+                    const deptNumber = getDepartmentNumber(user);
+                    const displayName = `${userName}${deptNumber ? ` (${deptNumber})` : ''}`;
+                    
+                    whoWas07UserId.value = userId;
+                    whoWas07Search.value = displayName;
+                    whoWas07Results.style.display = 'none';
+                }
+            });
+        });
+    }
+    
+    // Save who was 07 function with full user object (includes department number)
+    function saveWhoWas07WithUser(user) {
+        const deptNumber = getDepartmentNumberForUser(user);
+        const displayName = `${user.first_name} ${user.last_name}${deptNumber ? ` (${deptNumber})` : ''}`;
+        
+        // For "Vem var 07?", we should use the name instead of user_id
+        // This matches how manual attendance works with department numbers
+        fetch(`/api/alarm/{{ alarm[0] }}/who-was-07`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                user_id: null,  // Use name instead of user_id
+                name: displayName
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            return response.text().then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    console.error('Response text:', text);
+                    throw new Error('Invalid JSON response');
+                }
+            });
+        })
+        .then(data => {
+            if (data.success) {
+                // Update the display
+                whoWas07Search.value = displayName;
+                whoWas07UserId.value = user.id;
+                whoWas07Results.innerHTML = '';
+                whoWas07Results.style.display = 'none';
+                // No popup alert, just reload to show updated data
+                location.reload();
+            } else {
+                console.error('Error saving 07:', data.error);
+                alert('Fel: ' + (data.error || 'Okänt fel'));
+            }
+        })
+        .catch(error => {
+            console.error('Error saving 07:', error);
+            alert('Nätverksfel: ' + error.message);
+        });
+    }
+    
+    // Save who was 07 function (can be called directly for auto-add)
+    function saveWhoWas07(userId, firstName, lastName) {
+        // Get the department number for display
+        const deptNumber = getDepartmentNumberForUser({id: userId, first_name: firstName, last_name: lastName});
+        const displayName = `${firstName} ${lastName}${deptNumber ? ` (${deptNumber})` : ''}`;
+        
+        // For "Vem var 07?", we should use the name instead of user_id
+        // This matches how manual attendance works with department numbers
+        fetch(`/api/alarm/{{ alarm[0] }}/who-was-07`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                user_id: null,  // Use name instead of user_id
+                name: displayName
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            return response.text().then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    console.error('Response text:', text);
+                    throw new Error('Invalid JSON response');
+                }
+            });
+        })
+        .then(data => {
+            if (data.success) {
+                // Update the display
+                whoWas07Search.value = displayName;
+                whoWas07UserId.value = userId;
+                whoWas07Results.innerHTML = '';
+                whoWas07Results.style.display = 'none';
+                // No popup alert, just reload to show updated data
+                location.reload();
+            } else {
+                console.error('Error saving 07:', data.error);
+                alert('Fel: ' + (data.error || 'Okänt fel'));
+            }
+        })
+        .catch(error => {
+            console.error('Error saving 07:', error);
+            alert('Nätverksfel: ' + error.message);
+        });
+    }
+    
+    // Save who was 07
+    if (saveWhoWas07Btn) {
+        saveWhoWas07Btn.addEventListener('click', function() {
+            const userId = whoWas07UserId.value;
+            const searchValue = whoWas07Search.value.trim();
+            
+            if (!searchValue) {
+                alert('Ange ett namn eller välj en användare');
+                return;
+            }
+            
+            const button = this;
+            const originalText = button.textContent;
+            button.textContent = 'Sparar...';
+            button.disabled = true;
+            
+            fetch(`/api/alarm/{{ alarm[0] }}/who-was-07`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    user_id: userId || null,
+                    name: userId ? null : searchValue // Use search value as manual name if no user ID
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // No popup alert, just reload to show updated data
+                    location.reload();
+                } else {
+                    alert('Fel: ' + (data.error || 'Okänt fel'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Nätverksfel');
+            })
+            .finally(() => {
+                button.textContent = originalText;
+                button.disabled = false;
+            });
+        });
+    }
+    
+    // Clear who was 07
+    if (clearWhoWas07Btn) {
+        clearWhoWas07Btn.addEventListener('click', function() {
+            const button = this;
+            const originalText = button.textContent;
+            button.textContent = 'Rensar...';
+            button.disabled = true;
+                
+                fetch(`/api/alarm/{{ alarm[0] }}/who-was-07`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        user_id: null,
+                        name: ''
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // No popup alert, just reload to show updated data
+                        location.reload();
+                    } else {
+                        alert('Fel: ' + (data.error || 'Okänt fel'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Nätverksfel');
+                })
+                .finally(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                });
+        });
+    }
+    
+    // Drag and drop functionality for car assignments (table rows)
+    
+    // Setup drag handlers for all attendance rows
+    function setupRowDragAndDrop() {
+        document.querySelectorAll('.attendance-row.draggable-row').forEach(row => {
+            // Skip if already set up
+            if (row.hasAttribute('data-drag-setup')) return;
+            row.setAttribute('data-drag-setup', 'true');
+            
+            // Make sure row is draggable
+            row.setAttribute('draggable', 'true');
+            
+            // Make sure buttons are NOT draggable
+            row.querySelectorAll('button').forEach(btn => {
+                btn.setAttribute('draggable', 'false');
+            });
+            
+            row.addEventListener('dragstart', function(e) {
+                // Don't drag if clicking on button
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                
+                const userId = this.getAttribute('data-user-id');
+                if (!userId) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', userId);
+            });
+            
+            row.addEventListener('dragend', function(e) {
+                this.classList.remove('dragging');
+                document.querySelectorAll('.car-dropzone').forEach(zone => zone.classList.remove('drag-over'));
+            });
+            
+            // Mobile: Handle click to open modal (but not if dragging)
+            let isDragging = false;
+            const dragStartHandler = function() {
+                isDragging = true;
+            };
+            const dragEndHandler = function() {
+                setTimeout(() => { isDragging = false; }, 100);
+            };
+            
+            row.addEventListener('dragstart', dragStartHandler);
+            row.addEventListener('dragend', dragEndHandler);
+            
+            row.addEventListener('click', function(e) {
+                // Don't open modal if clicking button or dragging
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button') || isDragging) {
+                    return;
+                }
+                
+                // Only on mobile (screen width <= 768px)
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openMantimmarModal(this);
+                }
+            });
+        });
+    }
+    
+    // Open modal for editing Mantimmar and AA
+    function openMantimmarModal(row) {
+        const userId = row.getAttribute('data-user-id');
+        const userName = row.getAttribute('data-user-name');
+        const userNumber = row.getAttribute('data-user-number');
+        const deptId = row.getAttribute('data-department-id');
+        
+        // Get current values from the row
+        const mantimmarInsats = row.querySelector('.mantimmar-insats')?.value || 0;
+        const mantimmarBevakning = row.querySelector('.mantimmar-bevakning')?.value || 0;
+        const mantimmarAterstallning = row.querySelector('.mantimmar-aterstallning')?.value || 0;
+        
+        const aaRokdykningChecked = row.querySelector(`input[name="aa_rokdykning_${userId}_${deptId}"]:checked`);
+        const aaRokdykningValue = aaRokdykningChecked ? aaRokdykningChecked.value : 'false';
+        
+        const aaSjalvskyddChecked = row.querySelector(`input[name="aa_sjalvskydd_${userId}_${deptId}"]:checked`);
+        const aaSjalvskyddValue = aaSjalvskyddChecked ? aaSjalvskyddChecked.value : 'false';
+        
+        // Set modal title
+        document.getElementById('modal-user-name').textContent = `${userName}${userNumber ? ` (${userNumber})` : ''}`;
+        
+        // Populate modal content
+        const modalContent = document.getElementById('modal-content');
+        modalContent.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div>
+                    <h4 style="margin: 0 0 16px 0; color: #000; font-size: 1.1rem; font-weight: 600;">Mantimmar</h4>
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <label style="display: flex; align-items: center; justify-content: space-between; color: #000; font-size: 1rem;">
+                            <span style="font-weight: 500;">INSATS:</span>
+                            <input type="number" id="modal-mantimmar-insats" value="${mantimmarInsats}" min="0" style="width: 80px; height: 44px; padding: 8px; font-size: 1rem; text-align: center; border: 2px solid #ddd; border-radius: 6px; color: #000; background: #fff;">
+                        </label>
+                        <label style="display: flex; align-items: center; justify-content: space-between; color: #000; font-size: 1rem;">
+                            <span style="font-weight: 500;">BEVAKNING:</span>
+                            <input type="number" id="modal-mantimmar-bevakning" value="${mantimmarBevakning}" min="0" style="width: 80px; height: 44px; padding: 8px; font-size: 1rem; text-align: center; border: 2px solid #ddd; border-radius: 6px; color: #000; background: #fff;">
+                        </label>
+                        <label style="display: flex; align-items: center; justify-content: space-between; color: #000; font-size: 1rem;">
+                            <span style="font-weight: 500;">ÅTERSTÄLLNING:</span>
+                            <input type="number" id="modal-mantimmar-aterstallning" value="${mantimmarAterstallning}" min="0" style="width: 80px; height: 44px; padding: 8px; font-size: 1rem; text-align: center; border: 2px solid #ddd; border-radius: 6px; color: #000; background: #fff;">
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="margin: 0 0 16px 0; color: #000; font-size: 1.1rem; font-weight: 600;">AA RÖKDYKNING</h4>
+                    <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
+                            <input type="radio" name="modal-aa-rokdykning" value="true" ${aaRokdykningValue === 'true' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                            <span>Ja</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
+                            <input type="radio" name="modal-aa-rokdykning" value="false" ${aaRokdykningValue === 'false' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                            <span>Nej</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
+                            <input type="radio" name="modal-aa-rokdykning" value="null" ${aaRokdykningValue === 'null' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                            <span>N/A</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="margin: 0 0 16px 0; color: #000; font-size: 1.1rem; font-weight: 600;">AA SJÄLVSKYDD</h4>
+                    <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
+                            <input type="radio" name="modal-aa-sjalvskydd" value="true" ${aaSjalvskyddValue === 'true' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                            <span>Ja</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
+                            <input type="radio" name="modal-aa-sjalvskydd" value="false" ${aaSjalvskyddValue === 'false' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                            <span>Nej</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
+                            <input type="radio" name="modal-aa-sjalvskydd" value="null" ${aaSjalvskyddValue === 'null' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                            <span>N/A</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Store user and dept IDs for saving
+        modalContent.setAttribute('data-user-id', userId);
+        modalContent.setAttribute('data-dept-id', deptId);
+        
+        // Show modal (use !important to override CSS)
+        const modal = document.getElementById('mantimmar-modal');
+        modal.style.setProperty('display', 'flex', 'important');
+    }
+    
+    // Close modal
+    function closeMantimmarModal() {
+        const modal = document.getElementById('mantimmar-modal');
+        modal.style.setProperty('display', 'none', 'important');
+    }
+    
+    // Save modal data
+    function saveMantimmarModal() {
+        const modalContent = document.getElementById('modal-content');
+        const userId = modalContent.getAttribute('data-user-id');
+        const deptId = modalContent.getAttribute('data-dept-id');
+        
+        if (!userId || !deptId) return;
+        
+        // Get values from modal
+        const mantimmarInsats = document.getElementById('modal-mantimmar-insats').value || 0;
+        const mantimmarBevakning = document.getElementById('modal-mantimmar-bevakning').value || 0;
+        const mantimmarAterstallning = document.getElementById('modal-mantimmar-aterstallning').value || 0;
+        
+        const aaRokdykning = document.querySelector('input[name="modal-aa-rokdykning"]:checked')?.value || 'false';
+        const aaSjalvskydd = document.querySelector('input[name="modal-aa-sjalvskydd"]:checked')?.value || 'false';
+        
+        // Update the row's hidden inputs (they exist even if hidden on mobile)
+        const row = document.querySelector(`.attendance-row[data-user-id="${userId}"][data-department-id="${deptId}"]`);
+        if (row) {
+            const insatsInput = row.querySelector('.mantimmar-insats');
+            const bevakningInput = row.querySelector('.mantimmar-bevakning');
+            const aterstallningInput = row.querySelector('.mantimmar-aterstallning');
+            
+            if (insatsInput) insatsInput.value = mantimmarInsats;
+            if (bevakningInput) bevakningInput.value = mantimmarBevakning;
+            if (aterstallningInput) aterstallningInput.value = mantimmarAterstallning;
+            
+            const aaRokdykningRadio = row.querySelector(`input[name="aa_rokdykning_${userId}_${deptId}"][value="${aaRokdykning}"]`);
+            if (aaRokdykningRadio) aaRokdykningRadio.checked = true;
+            
+            const aaSjalvskyddRadio = row.querySelector(`input[name="aa_sjalvskydd_${userId}_${deptId}"][value="${aaSjalvskydd}"]`);
+            if (aaSjalvskyddRadio) aaSjalvskyddRadio.checked = true;
+        }
+        
+        // Close modal
+        closeMantimmarModal();
+        
+        // Trigger save car assignments to persist the data
+        const saveBtn = document.querySelector(`.save-car-assignments[data-dept-id="${deptId}"]`);
+        if (saveBtn) {
+            // Auto-save silently
+            saveBtn.click();
+        }
+    }
+    
+    // Modal event listeners (only set up once)
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const modalSaveBtn = document.getElementById('modal-save-btn');
+    const mantimmarModal = document.getElementById('mantimmar-modal');
+    
+    if (modalCancelBtn) {
+        modalCancelBtn.addEventListener('click', closeMantimmarModal);
+    }
+    
+    if (modalSaveBtn) {
+        modalSaveBtn.addEventListener('click', saveMantimmarModal);
+    }
+    
+    // Close modal when clicking outside
+    if (mantimmarModal) {
+        mantimmarModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeMantimmarModal();
+            }
+        });
+    }
+    
+    // Load saved car assignments for a department
+    function loadCarAssignments(deptId) {
+        // Ensure deptId is a string for consistency
+        deptId = String(deptId);
+        
+        return fetch(`/api/alarm/{{ alarm[0] }}/car-assignments?dept_id=${deptId}`, {
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.assignments) {
+                // Get all car dropzones for this department
+                const carDropzones = document.querySelectorAll(`.car-dropzone[data-dept-id="${deptId}"]`);
+                
+                // Clear all cars first
+                carDropzones.forEach(zone => {
+                    const carUsers = zone.querySelector('.car-users');
+                    if (carUsers) carUsers.innerHTML = '';
+                });
+                
+                // Get all assigned user IDs (ensure they're strings)
+                const assignedUserIds = new Set();
+                Object.values(data.assignments).flat().forEach(u => {
+                    if (u.user_id) {
+                        assignedUserIds.add(String(u.user_id).trim());
+                    }
+                });
+                
+                // Add users to cars first
+                Object.keys(data.assignments).forEach(carCode => {
+                    const zone = document.querySelector(`.car-dropzone[data-car-code="${carCode}"][data-dept-id="${deptId}"]`);
+                    if (zone) {
+                        const carUsers = zone.querySelector('.car-users');
+                        if (carUsers) {
+                            data.assignments[carCode].forEach(user => {
+                                const userItem = document.createElement('div');
+                                userItem.className = 'car-user-item';
+                                userItem.setAttribute('data-user-id', user.user_id);
+                                userItem.setAttribute('data-dept-id', deptId);
+                                
+                                const userNameSpan = document.createElement('span');
+                                userNameSpan.textContent = user.name + (user.number ? ` (${user.number})` : '');
+                                userItem.appendChild(userNameSpan);
+                                
+                                const removeBtn = document.createElement('button');
+                                removeBtn.className = 'remove-from-car';
+                                removeBtn.textContent = '×';
+                                removeBtn.setAttribute('type', 'button');
+                                removeBtn.setAttribute('data-user-id', user.user_id);
+                                removeBtn.setAttribute('data-dept-id', deptId);
+                                removeBtn.addEventListener('click', function(e) {
+                                    e.stopPropagation();
+                                    removeUserFromCar(user.user_id, deptId);
+                                });
+                                userItem.appendChild(removeBtn);
+                                
+                                carUsers.appendChild(userItem);
+                                
+                                // Populate Mantimmar and AA fields in attendance row
+                                const attendanceRow = document.querySelector(`#attendance-tbody-${deptId} .attendance-row[data-user-id="${user.user_id}"]`);
+                                if (attendanceRow) {
+                                    // Populate Mantimmar fields if they exist
+                                    if (user.mantimmar_insats !== undefined && user.mantimmar_insats !== null) {
+                                        const mantimmarInsatsInput = attendanceRow.querySelector(`.mantimmar-insats[data-user-id="${user.user_id}"][data-dept-id="${deptId}"]`);
+                                        if (mantimmarInsatsInput) mantimmarInsatsInput.value = user.mantimmar_insats || 0;
+                                    }
+                                    
+                                    if (user.mantimmar_bevakning !== undefined && user.mantimmar_bevakning !== null) {
+                                        const mantimmarBevakningInput = attendanceRow.querySelector(`.mantimmar-bevakning[data-user-id="${user.user_id}"][data-dept-id="${deptId}"]`);
+                                        if (mantimmarBevakningInput) mantimmarBevakningInput.value = user.mantimmar_bevakning || 0;
+                                    }
+                                    
+                                    if (user.mantimmar_aterstallning !== undefined && user.mantimmar_aterstallning !== null) {
+                                        const mantimmarAterstallningInput = attendanceRow.querySelector(`.mantimmar-aterstallning[data-user-id="${user.user_id}"][data-dept-id="${deptId}"]`);
+                                        if (mantimmarAterstallningInput) mantimmarAterstallningInput.value = user.mantimmar_aterstallning || 0;
+                                    }
+                                    
+                                    // Set AA radio buttons - convert from database format ('Ja', 'Nej', 'Inte tillgänglig') to radio values
+                                    if (user.anvant_aa_rokdykning !== undefined && user.anvant_aa_rokdykning !== null && user.anvant_aa_rokdykning !== '') {
+                                        let aaRokdykningValue = 'null';
+                                        if (user.anvant_aa_rokdykning === 'Ja') {
+                                            aaRokdykningValue = 'true';
+                                        } else if (user.anvant_aa_rokdykning === 'Nej') {
+                                            aaRokdykningValue = 'false';
+                                        } else if (user.anvant_aa_rokdykning === 'Inte tillgänglig') {
+                                            aaRokdykningValue = 'null';
+                                        }
+                                        const aaRokdykningRadio = attendanceRow.querySelector(`input[name="aa_rokdykning_${user.user_id}_${deptId}"][value="${aaRokdykningValue}"]`);
+                                        if (aaRokdykningRadio) aaRokdykningRadio.checked = true;
+                                    }
+                                    
+                                    if (user.anvant_aa_sjalvskydd !== undefined && user.anvant_aa_sjalvskydd !== null && user.anvant_aa_sjalvskydd !== '') {
+                                        let aaSjalvskyddValue = 'null';
+                                        if (user.anvant_aa_sjalvskydd === 'Ja') {
+                                            aaSjalvskyddValue = 'true';
+                                        } else if (user.anvant_aa_sjalvskydd === 'Nej') {
+                                            aaSjalvskyddValue = 'false';
+                                        } else if (user.anvant_aa_sjalvskydd === 'Inte tillgänglig') {
+                                            aaSjalvskyddValue = 'null';
+                                        }
+                                        const aaSjalvskyddRadio = attendanceRow.querySelector(`input[name="aa_sjalvskydd_${user.user_id}_${deptId}"][value="${aaSjalvskyddValue}"]`);
+                                        if (aaSjalvskyddRadio) aaSjalvskyddRadio.checked = true;
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+                
+                // After adding users to cars, update assigned status
+                updateAssignedStatus(deptId);
+            }
+            return data;
+        })
+        .catch(error => {
+            console.error('Error loading assignments:', error);
+            return { success: false };
+        });
+    }
+    
+    // Setup drag and drop for all departments
+    function setupDropzones() {
+        document.querySelectorAll('.car-dropzone').forEach(zone => {
+            // Skip if already set up
+            if (zone.hasAttribute('data-dropzone-setup')) return;
+            zone.setAttribute('data-dropzone-setup', 'true');
+            
+            zone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-over');
+                return false;
+            });
+            
+            zone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                
+                // Get user ID from dataTransfer
+                const userId = e.dataTransfer.getData('text/plain');
+                if (!userId) return false;
+                
+                const carCode = this.getAttribute('data-car-code');
+                const deptId = this.getAttribute('data-dept-id');
+                const carUsersContainer = this.querySelector('.car-users');
+                
+                if (carCode && carUsersContainer && deptId) {
+                    // Find the row that was dragged (scoped to this department)
+                    const draggedRow = document.querySelector(`#attendance-tbody-${deptId} .attendance-row[data-user-id="${userId}"]`);
+                    if (!draggedRow) return false;
+                    
+                    const userName = draggedRow.getAttribute('data-user-name');
+                    const userNumber = draggedRow.getAttribute('data-user-number');
+                    
+                    // Check if user is already in this car
+                    const existingUser = carUsersContainer.querySelector(`[data-user-id="${userId}"]`);
+                    if (existingUser) {
+                        return false; // Already assigned to this car
+                    }
+                    
+                    // Remove user from other cars in this department
+                    document.querySelectorAll(`.car-dropzone[data-dept-id="${deptId}"] .car-users`).forEach(container => {
+                        const userItem = container.querySelector(`[data-user-id="${userId}"]`);
+                        if (userItem) {
+                            userItem.remove();
+                        }
+                    });
+                    
+                    // Add user to this car
+                    const userItem = document.createElement('div');
+                    userItem.className = 'car-user-item';
+                    userItem.setAttribute('data-user-id', userId);
+                    userItem.setAttribute('data-dept-id', deptId);
+                    
+                    const userNameSpan = document.createElement('span');
+                    userNameSpan.textContent = userName + (userNumber ? ` (${userNumber})` : '');
+                    userItem.appendChild(userNameSpan);
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-from-car';
+                    removeBtn.textContent = '×';
+                    removeBtn.setAttribute('type', 'button');
+                    removeBtn.setAttribute('data-user-id', userId);
+                    removeBtn.setAttribute('data-dept-id', deptId);
+                    removeBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        removeUserFromCar(userId, deptId);
+                    });
+                    userItem.appendChild(removeBtn);
+                    
+                    carUsersContainer.appendChild(userItem);
+                    
+                    // Update assigned status for all rows in this department
+                    updateAssignedStatus(deptId);
+                }
+                return false;
+            });
+            
+            zone.addEventListener('dragleave', function(e) {
+                this.classList.remove('drag-over');
+            });
+        });
+    }
+    
+    // Update assigned status for all rows in a department based on current car assignments
+    function updateAssignedStatus(deptId) {
+        deptId = String(deptId);
+        
+        // Get all assigned user IDs from car dropzones
+        const assignedUserIds = new Set();
+        const carUserItems = document.querySelectorAll(`.car-dropzone[data-dept-id="${deptId}"] .car-user-item`);
+        
+        carUserItems.forEach(item => {
+            const userId = item.getAttribute('data-user-id');
+            if (userId) {
+                const trimmedUserId = String(userId).trim();
+                assignedUserIds.add(trimmedUserId);
+            }
+        });
+        
+        // Mark rows as assigned or not
+        const attendanceRows = document.querySelectorAll(`#attendance-tbody-${deptId} .attendance-row`);
+        
+        attendanceRows.forEach(row => {
+            const userId = String(row.getAttribute('data-user-id')).trim();
+            const isAssigned = assignedUserIds.has(userId);
+            
+            if (isAssigned) {
+                row.classList.add('assigned');
+                // Also set inline style to ensure it takes effect
+                row.style.backgroundColor = '#28a745';
+                row.style.color = 'white';
+                // Set style on all td elements
+                row.querySelectorAll('td').forEach(td => {
+                    td.style.backgroundColor = '#28a745';
+                    td.style.color = 'white';
+                });
+            } else {
+                row.classList.remove('assigned');
+                row.style.backgroundColor = '';
+                row.style.color = '';
+                row.querySelectorAll('td').forEach(td => {
+                    td.style.backgroundColor = '';
+                    td.style.color = '';
+                });
+            }
+        });
+    }
+    
+    // Remove user from car
+    function removeUserFromCar(userId, deptId) {
+        deptId = String(deptId);
+        // Remove user from all cars in this department
+        document.querySelectorAll(`.car-dropzone[data-dept-id="${deptId}"] .car-users`).forEach(container => {
+            const userItem = container.querySelector(`.car-user-item[data-user-id="${userId}"]`);
+            if (userItem) {
+                userItem.remove();
+            }
+        });
+        
+        // Update assigned status for all rows
+        updateAssignedStatus(deptId);
+    }
+    
+    // Setup save buttons for each department
+    document.querySelectorAll('.save-car-assignments').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const deptId = this.getAttribute('data-dept-id');
+            const assignments = {};
+            
+            // Get all car dropzones for this department
+            const carDropzones = document.querySelectorAll(`.car-dropzone[data-dept-id="${deptId}"]`);
+            
+            carDropzones.forEach(zone => {
+                const carCode = zone.getAttribute('data-car-code');
+                const userItems = zone.querySelectorAll('.car-user-item');
+                userItems.forEach(item => {
+                    const userId = item.getAttribute('data-user-id');
+                    if (userId) {
+                        if (!assignments[carCode]) {
+                            assignments[carCode] = [];
+                        }
+                        // Get user name and number from the attendance row
+                        const row = document.querySelector(`#attendance-tbody-${deptId} .attendance-row[data-user-id="${userId}"]`);
+                        if (row) {
+                            // Get Mantimmar values
+                            const mantimmarInsats = row.querySelector(`.mantimmar-insats[data-user-id="${userId}"][data-dept-id="${deptId}"]`)?.value || 0;
+                            const mantimmarBevakning = row.querySelector(`.mantimmar-bevakning[data-user-id="${userId}"][data-dept-id="${deptId}"]`)?.value || 0;
+                            const mantimmarAterstallning = row.querySelector(`.mantimmar-aterstallning[data-user-id="${userId}"][data-dept-id="${deptId}"]`)?.value || 0;
+                            
+                            // Get AA values - convert to database format ('Ja', 'Nej', 'Inte tillgänglig')
+                            const aaRokdykningRadio = row.querySelector(`input[name="aa_rokdykning_${userId}_${deptId}"]:checked`);
+                            let aaRokdykning = null;
+                            if (aaRokdykningRadio) {
+                                if (aaRokdykningRadio.value === 'true') {
+                                    aaRokdykning = 'Ja';
+                                } else if (aaRokdykningRadio.value === 'false') {
+                                    aaRokdykning = 'Nej';
+                                } else if (aaRokdykningRadio.value === 'null') {
+                                    aaRokdykning = 'Inte tillgänglig';
+                                }
+                            }
+                            
+                            const aaSjalvskyddRadio = row.querySelector(`input[name="aa_sjalvskydd_${userId}_${deptId}"]:checked`);
+                            let aaSjalvskydd = null;
+                            if (aaSjalvskyddRadio) {
+                                if (aaSjalvskyddRadio.value === 'true') {
+                                    aaSjalvskydd = 'Ja';
+                                } else if (aaSjalvskyddRadio.value === 'false') {
+                                    aaSjalvskydd = 'Nej';
+                                } else if (aaSjalvskyddRadio.value === 'null') {
+                                    aaSjalvskydd = 'Inte tillgänglig';
+                                }
+                            }
+                            
+                            assignments[carCode].push({
+                                user_id: userId,
+                                name: row.getAttribute('data-user-name'),
+                                number: row.getAttribute('data-user-number') || '',
+                                mantimmar_insats: parseInt(mantimmarInsats, 10) || 0,
+                                mantimmar_bevakning: parseInt(mantimmarBevakning, 10) || 0,
+                                mantimmar_aterstallning: parseInt(mantimmarAterstallning, 10) || 0,
+                                anvant_aa_rokdykning: aaRokdykning,
+                                anvant_aa_sjalvskydd: aaSjalvskydd
+                            });
+                        }
+                    }
+                });
+            });
+            
+            const button = this;
+            const originalText = button.textContent;
+            button.textContent = 'Sparar...';
+            button.disabled = true;
+            
+            fetch('/api/alarm/{{ alarm[0] }}/save-car-assignments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    department_id: deptId,
+                    assignments: assignments
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Tilldelningar sparade!');
+                    // Reload assignments to ensure UI is in sync
+                    loadCarAssignments(deptId).then(() => {
+                        // Re-setup drag and drop after reloading (with delay to ensure DOM is ready)
+                        setTimeout(() => {
+                            setupRowDragAndDrop();
+                            setupDropzones();
+                        }, 100);
+                    });
+                } else {
+                    alert('Fel: ' + (data.error || 'Okänt fel'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Nätverksfel');
+            })
+            .finally(() => {
+                button.textContent = originalText;
+                button.disabled = false;
+            });
+        });
+    });
+    
+    // Initialize drag and drop - wait a bit to ensure DOM is fully ready
+    setTimeout(function() {
+        setupRowDragAndDrop();
+        setupDropzones();
+        
+        // Load saved assignments for all departments with closed alarms
+        const departmentArticles = document.querySelectorAll('article[data-dept-id]');
+        const loadPromises = [];
+        
+        departmentArticles.forEach(article => {
+            const deptIdAttr = article.getAttribute('data-dept-id');
+            const deptId = parseInt(deptIdAttr, 10);
+            
+            // Check if this department has cars (meaning alarm is closed)
+            const hasCars = article.querySelector('.cars-container');
+            
+            if (hasCars && deptId && !isNaN(deptId)) {
+                // Use the string version for consistency
+                loadPromises.push(loadCarAssignments(deptIdAttr));
+            }
+        });
+        
+        // Wait for all assignments to load, then re-setup drag and drop
+        Promise.all(loadPromises).then(() => {
+            setupRowDragAndDrop();
+            setupDropzones();
+        });
+    }, 50);
+    
+    // Handle edit/clear buttons for 07 (reuse variables declared earlier)
+    const editWhoWas07Btn2 = document.getElementById('edit-who-was-07');
+    // Reuse clearWhoWas07Btn from earlier declaration
+    const whoWas07Display = document.getElementById('who-was-07-display');
+    
+    if (editWhoWas07Btn2) {
+        editWhoWas07Btn2.addEventListener('click', function() {
+            // Hide display, show search
+            whoWas07Display.parentElement.style.display = 'none';
+            const searchSection = document.createElement('div');
+            searchSection.className = 'search-section';
+            searchSection.style.marginTop = '5px';
+            searchSection.innerHTML = `
+                <div class="search-container" style="display: flex; gap: 10px;">
+                    <input type="text" id="who-was-07-search" placeholder="Ange namn (t.ex. Robin) eller nummer (t.ex. 52)" autocomplete="off" style="flex: 1; padding: 8px;">
+                    <input type="hidden" id="who-was-07-user-id">
+                    <button type="button" id="save-who-was-07" class="btn btn-primary">Spara 07</button>
+                </div>
+                <div id="who-was-07-results" class="search-results"></div>
+            `;
+            whoWas07Display.parentElement.parentElement.appendChild(searchSection);
+            // Re-initialize search functionality
+            setTimeout(() => {
+                initializeWhoWas07Search();
+            }, 100);
+        });
+    }
+    
+    if (clearWhoWas07Btn) {
+        // Only add listener if not already added
+        if (!clearWhoWas07Btn.hasAttribute('data-listener-added')) {
+            clearWhoWas07Btn.setAttribute('data-listener-added', 'true');
+            clearWhoWas07Btn.addEventListener('click', function() {
+            if (confirm('Är du säker på att du vill rensa 07?')) {
+                fetch(`/api/alarm/{{ alarm[0] }}/who-was-07`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        user_id: null,
+                        name: ''
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Fel: ' + (data.error || 'Okänt fel'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Nätverksfel');
+                });
+            }
+            });
+        }
+    }
+    
+    // Rapportförfattare search functionality
+    const rapportforfattareSearch = document.getElementById('rapportforfattare-search');
+    const rapportforfattareUserId = document.getElementById('rapportforfattare-user-id');
+    const rapportforfattareResults = document.getElementById('rapportforfattare-results');
+    
+    if (rapportforfattareSearch) {
+        let searchTimeout;
+        rapportforfattareSearch.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const searchTerm = this.value.trim();
+            
+            const isNumberSearch = /^\d+$/.test(searchTerm);
+            if (!isNumberSearch && searchTerm.length < 2) {
+                if (rapportforfattareResults) rapportforfattareResults.innerHTML = '';
+                if (rapportforfattareUserId) rapportforfattareUserId.value = '';
+                return;
+            }
+            
+            if (searchTerm.length === 0) {
+                if (rapportforfattareResults) rapportforfattareResults.innerHTML = '';
+                if (rapportforfattareUserId) rapportforfattareUserId.value = '';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/search-user-by-name?q=${encodeURIComponent(searchTerm)}`, {
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.users && data.users.length > 0) {
+                        if (data.users.length === 1 && /^\d+$/.test(searchTerm)) {
+                            // Auto-select if it's a number and only one result
+                            const user = data.users[0];
+                            const deptNumber = getDepartmentNumberForUser(user);
+                            rapportforfattareSearch.value = `${user.first_name} ${user.last_name}${deptNumber ? ` (${deptNumber})` : ''}`;
+                            if (rapportforfattareUserId) rapportforfattareUserId.value = user.id;
+                            if (rapportforfattareResults) {
+                                rapportforfattareResults.innerHTML = '';
+                                rapportforfattareResults.style.display = 'none';
+                            }
+                        } else {
+                            // Show search results
+                            if (rapportforfattareResults) {
+                                rapportforfattareResults.innerHTML = data.users.map(user => {
+                                const deptNumber = getDepartmentNumberForUser(user);
+                                const displayName = `${user.first_name} ${user.last_name}${deptNumber ? ` (${deptNumber})` : ''}`;
+                                return `
+                                    <div class="user-result" data-user-id="${user.id}" data-user-name="${user.first_name} ${user.last_name}" style="cursor: pointer; padding: 10px; border: 1px solid #ccc; margin: 5px 0; border-radius: 4px;">
+                                        <h4>${displayName}</h4>
+                                        <p>Avdelningar: ${user.department_codes ? user.department_codes.join(', ') : 'Inga'}</p>
+                                    </div>
+                                `;
+                                }).join('');
+                                rapportforfattareResults.style.display = 'block';
+                                
+                                // Add click handlers
+                                rapportforfattareResults.querySelectorAll('.user-result').forEach(result => {
+                                    result.addEventListener('click', function() {
+                                        const userId = this.getAttribute('data-user-id');
+                                        const user = data.users.find(u => u.id === userId);
+                                        if (user) {
+                                            const deptNumber = getDepartmentNumberForUser(user);
+                                            rapportforfattareSearch.value = `${user.first_name} ${user.last_name}${deptNumber ? ` (${deptNumber})` : ''}`;
+                                            if (rapportforfattareUserId) rapportforfattareUserId.value = userId;
+                                            rapportforfattareResults.innerHTML = '';
+                                            rapportforfattareResults.style.display = 'none';
+                                        }
+                                    });
+                                });
+                            }
+                        }
+                    } else {
+                        if (rapportforfattareResults) {
+                            rapportforfattareResults.innerHTML = '<p>Inga användare hittades - använd som manuellt namn</p>';
+                            rapportforfattareResults.style.display = 'block';
+                        }
+                        if (rapportforfattareUserId) rapportforfattareUserId.value = '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    rapportforfattareResults.innerHTML = '<p>Fel vid sökning</p>';
+                    rapportforfattareResults.style.display = 'block';
+                });
+            }, 300);
+        });
+        
+        // Hide results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (rapportforfattareResults && !rapportforfattareSearch.contains(e.target) && !rapportforfattareResults.contains(e.target)) {
+                rapportforfattareResults.style.display = 'none';
+            }
+        });
+    }
+    
+    // Load existing beskrivning, larmtyp, raddningsledare, rapportförfattare, and email on page load
+    function loadExistingBeskrivning() {
+        if (!selectedDeptId) return;
+        
+        fetch(`/api/alarm/${alarmId}/comment?dept_id=${selectedDeptId}`, {
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const beskrivningTextEl = document.getElementById('beskrivning-text');
+                if (beskrivningTextEl && data.comment_text) {
+                    beskrivningTextEl.value = data.comment_text;
+                }
+                
+                const larmtypEl = document.getElementById('edit_larmtyp');
+                if (larmtypEl && data.larmtyp) {
+                    larmtypEl.value = data.larmtyp;
+                }
+                
+                const raddningsledareEl = document.getElementById('raddningsledare-select');
+                if (raddningsledareEl && data.raddningsledare) {
+                    raddningsledareEl.value = data.raddningsledare;
+                }
+                
+                // Load rapportförfattare
+                if (data.rapportforfattare_user_id && rapportforfattareUserId) {
+                    rapportforfattareUserId.value = data.rapportforfattare_user_id;
+                }
+                if (data.rapportforfattare_name && rapportforfattareSearch) {
+                    rapportforfattareSearch.value = data.rapportforfattare_name;
+                } else if (!data.rapportforfattare_name && rapportforfattareSearch && !rapportforfattareSearch.value) {
+                    // Default to logged in user if no saved value
+                    const currentUserName = '{% if session.first_name %}{{ session.first_name }} {{ session.last_name }}{% endif %}';
+                    if (currentUserName && currentUserName.trim()) {
+                        rapportforfattareSearch.value = currentUserName;
+                        if (rapportforfattareUserId) {
+                            rapportforfattareUserId.value = '{{ session.user_id }}';
+                        }
+                    }
+                }
+                
+                // Load email (from saved data or cookie)
+                const emailEl = document.getElementById('edit_email');
+                if (emailEl) {
+                    if (data.email) {
+                        emailEl.value = data.email;
+                    } else {
+                        // Fallback to cookie if no saved email
+                        const savedEmail = getCookie('alarm_report_email');
+                        if (savedEmail && !emailEl.value) {
+                            emailEl.value = savedEmail;
+                        }
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            // Silently fail if no comment exists
+        });
+    }
+    
+    // Load existing beskrivning on page load
+    loadExistingBeskrivning();
+    
+    // Save all data (alarm data + beskrivning) - combined button
+    const saveAllDataBtn = document.getElementById('save-all-data');
+    if (saveAllDataBtn) {
+        saveAllDataBtn.addEventListener('click', function() {
+            const formData = {
+                what: document.getElementById('edit_what').value.trim(),
+                where_location: document.getElementById('edit_where').value.trim(),
+                larmtyp: document.getElementById('edit_larmtyp')?.value || '',
+                raddningsledare: document.getElementById('raddningsledare-select')?.value || '',
+                rapportforfattare_user_id: document.getElementById('rapportforfattare-user-id')?.value || '',
+                rapportforfattare_name: document.getElementById('rapportforfattare-search')?.value.trim() || '',
+                email: document.getElementById('edit_email')?.value.trim() || ''
+            };
+            
+            if (!formData.what || !formData.where_location) {
+                alert('Händelse/objekt och Adress är obligatoriska fält');
+                return;
+            }
+            
+            const button = this;
+            const originalText = button.textContent;
+            button.textContent = 'Sparar...';
+            button.disabled = true;
+            
+            // First save alarm data
+            fetch(`/api/alarm/{{ alarm[0] }}/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.error || 'Kunde inte spara alarmdata');
+                }
+                
+                // Save email to cookie
+                if (formData.email) {
+                    document.cookie = `alarm_report_email=${encodeURIComponent(formData.email)}; path=/; max-age=31536000`;
+                }
+                
+                // Then save beskrivning if department is selected
+                if (!selectedDeptId || isNaN(selectedDeptId)) {
+                    // No department selected, just reload
+                    alert('Data sparad!');
+                    location.reload();
+                    return;
+                }
+                
+                const beskrivningText = document.getElementById('beskrivning-text')?.value.trim() || '';
+                
+                return fetch('/api/alarm-comment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        alarm_id: '{{ alarm[0] }}',
+                        comment: beskrivningText,
+                        department_id: selectedDeptId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Alla ändringar sparade!');
+                        location.reload();
+                    } else {
+                        // Alarm data saved but beskrivning failed
+                        alert('Alarmdata sparad, men beskrivning kunde inte sparas: ' + (data.error || 'Okänt fel'));
+                        location.reload();
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Fel: ' + error.message);
+                })
+                .finally(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                });
+        });
+    }
+});
+</script>
+{% endblock %}

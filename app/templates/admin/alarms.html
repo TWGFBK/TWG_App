@@ -1,0 +1,584 @@
+{% extends "base.html" %}
+
+{% block title %}Alarm/History - Närvarorapportering{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="../../static/alarms.css">
+<div class="grid">
+    <div>
+        <h1>Alarm/History</h1>
+        {% if session.is_superadmin %}
+        <div class="alert alert-info">
+            <strong>Superadmin:</strong> Du kan se och hantera alla larm från alla brandstationer.
+        </div>
+        {% elif session.is_admin %}
+        <div class="alert alert-warning">
+            <strong>Admin:</strong> Du kan endast se och hantera larm från dina tilldelade brandstationer.
+        </div>
+        {% elif session.role_07 %}
+        <div class="alert alert-warning">
+            <strong>Roll 07:</strong> Du kan se och hantera larm från dina tilldelade brandstationer.
+        </div>
+        {% endif %}
+        
+        <!-- Department Selector -->
+        {% if (user_departments|length > 1 and not is_superadmin and not is_md) or is_superadmin %}
+        <div class="department-selector">
+            <h3>På vems vägnar</h3>
+            <p>Välj vilken avdelning du agerar för:</p>
+            <div class="dept-buttons">
+                {% if is_superadmin %}
+                    {% for dept in departments %}
+                    <a href="{{ url_for('admin_alarms', dept_id=dept[0]) }}" 
+                       class="btn {% if selected_dept_id|string == dept[0]|string %}btn-primary{% else %}btn-secondary{% endif %}">
+                        {{ dept[1] }} - {{ dept[2] }}
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    {% for dept in user_departments %}
+                    <a href="{{ url_for('admin_alarms', dept_id=dept[0]) }}" 
+                       class="btn {% if selected_dept_id|string == dept[0]|string %}btn-primary{% else %}btn-secondary{% endif %}">
+                        {{ dept[1] }} - {{ dept[2] }}
+                    </a>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {% if selected_dept %}
+            <p class="current-dept"><strong>Nuvarande avdelning:</strong> {{ selected_dept[1] }} - {{ selected_dept[2] }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="action-links">
+            <a href="{{ url_for('create_alarm') }}" class="add-action-link">+ Skapa larm</a>
+            <a href="{{ url_for('static', filename='Stänga_ett_Larm.pdf') }}" target="_blank" class="guide-link">Hur man stänger ett larm guide</a>
+        </div>
+        
+        <style>
+        .action-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        
+        .guide-link {
+            color: white;
+            text-decoration: underline;
+            text-decoration-color: #28a745;
+            font-size: 1.1em;
+            display: inline-block;
+        }
+        
+        .guide-link:hover {
+            color: #e0e0e0;
+            text-decoration-color: #218838;
+        }
+        .add-action-link {
+            color: white;
+            text-decoration: underline;
+            text-decoration-color: #007bff;
+            font-size: 1.1em;
+            margin-left: 10px;
+            display: inline-block;
+        }
+        
+        .add-action-link:hover {
+            color: #e0e0e0;
+            text-decoration-color: #0056b3;
+        }
+        
+        /* Department Selector */
+        .department-selector {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .department-selector h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .department-selector p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .dept-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .dept-buttons .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .dept-buttons .btn-primary {
+            background: #007bff;
+            color: white;
+            border: 1px solid #007bff;
+        }
+        
+        .dept-buttons .btn-primary:hover {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+        
+        .dept-buttons .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: 1px solid #6c757d;
+        }
+        
+        .dept-buttons .btn-secondary:hover {
+            background: #545b62;
+            border-color: #545b62;
+        }
+        
+        .current-dept {
+            background: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 0;
+            color: #333;
+            font-weight: 500;
+        }
+        </style>
+        
+        <hr>
+        
+        <h2>Befintliga larm</h2>
+        
+        <!-- Filter and Search Controls -->
+        <div class="filter-controls">
+            <!-- Alarm Type Filter -->
+            <div class="filter-group">
+                <label for="type">Typ:</label>
+                <select name="type" id="type">
+                    <option value="real" {% if alarm_type_filter == 'real' %}selected{% endif %}>Riktiga larm</option>
+                    <option value="practice" {% if alarm_type_filter == 'practice' %}selected{% endif %}>Övningar</option>
+                    <option value="test" {% if alarm_type_filter == 'test' %}selected{% endif %}>Test</option>
+                </select>
+            </div>
+            
+            <!-- Search -->
+            <div class="search-group">
+                <label for="search">Sök:</label>
+                <input type="text" name="search" id="search" value="{{ search_query }}" 
+                       placeholder="Sök i beskrivning, plats, vad, vem...">
+            </div>
+        </div>
+        
+        <!-- Export Section -->
+        <div class="export-controls">
+            <h3>Exportera närvaro</h3>
+            <div class="export-form">
+                <div class="export-group">
+                    <label for="export_start_date">Från datum:</label>
+                    <input type="date" id="export_start_date" name="export_start_date">
+                </div>
+                <div class="export-group">
+                    <label for="export_end_date">Till datum:</label>
+                    <input type="date" id="export_end_date" name="export_end_date">
+                </div>
+                <div class="export-group">
+                    <button type="button" id="export-btn" class="btn btn-primary">Exportera till Excel</button>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+        .filter-controls {
+            margin-bottom: 1rem;
+        }
+        
+        .filter-controls .grid {
+            display: flex;
+            gap: 20px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group,
+        .search-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .filter-group label,
+        .search-group label {
+            font-weight: bold;
+            color: #333;
+            font-size: 0.9rem;
+        }
+        
+        .filter-group select,
+        .search-group input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background: #f8f9fa;
+        }
+        
+        .search-group input {
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        /* Export Controls */
+        .export-controls {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .export-controls h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .export-form {
+            display: flex;
+            gap: 20px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+        
+        .export-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .export-controls .export-group label {
+            font-weight: bold;
+            color: #000000 !important;
+            font-size: 0.9rem;
+        }
+        
+        .export-group input[type="date"] {
+            padding: 16px 20px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1.3rem;
+            background: white;
+            color: #000000;
+            box-sizing: border-box;
+            height: 60px;
+            min-width: 220px;
+        }
+        
+        .export-group button {
+            padding: 16px 32px;
+            border-radius: 4px;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            white-space: nowrap;
+            box-sizing: border-box;
+            height: 60px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .export-group .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+        
+        .export-group .btn-primary:hover {
+            background: #218838;
+        }
+        </style>
+        
+       <!-- <div class="sort-controls">
+            <label for="sort_by">Sortera efter:</label>
+            <select id="sort_by" onchange="sortAlarms()">
+                <option value="time_desc" selected>Senaste först</option>
+                <option value="time_asc">Äldsta först</option>
+                <option value="type_real">Larm (real)</option>
+                <option value="type_test">Test</option>
+                <option value="type_practice">Övning</option>
+                <option value="status_active">Aktiva först</option>
+                <option value="status_ended">Avslutade först</option>
+            </select>
+        </div> -->
+        
+        <!-- Pagination info -->
+        <div class="pagination-info">
+            <p>Visar {{ alarms|length }} av {{ pagination.total_count }} larm (sida {{ pagination.page }} av {{ pagination.total_pages }})</p>
+        </div>
+        
+        <!-- Horizontal alarm cards -->
+        <div class="alarms-horizontal-container" id="alarms-container">
+            {% for alarm in alarms %}
+            <div class="alarm-card" data-type="{{ alarm[1] }}" data-time="{{ alarm[3].isoformat() }}">
+                <div class="alarm-header">
+                    <div class="alarm-title">
+                        <h3>{{ alarm[2] or 'Larm' }}</h3>
+                        <span class="alarm-type">{{ alarm[1] }}</span>
+                    </div>
+                </div>
+                
+                <div class="alarm-details">
+                    <div class="detail-row">
+                        <span class="label">Start:</span>
+                        <span class="value">{{ alarm[3]|format_local('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+                    {% if alarm[4] %}
+                    <div class="detail-row">
+                        <span class="label">Slut:</span>
+                        <span class="value">{{ alarm[4]|format_local('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+                    {% else %}
+                    <div class="detail-row status-active">
+                        <span class="label">Status:</span>
+                        <span class="value">Aktivt</span>
+                    </div>
+                    {% endif %}
+                    {% if alarm[5] %}
+                    <div class="detail-row">
+                        <span class="label">Källa:</span>
+                        <span class="value">{{ alarm[5] }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="detail-row">
+                        <span class="label">Avdelningar:</span>
+                        <span class="value">{{ alarm[6]|join(', ') if alarm[6] else 'Inga' }}</span>
+                    </div>
+                </div>
+                
+                <div class="alarm-actions">
+                    <a href="{{ url_for('alarm_detail', alarm_id=alarm[0]) }}" class="btn btn-secondary">
+                        Visa detaljer
+                    </a>
+                    {# Close button removed - use alarm detail page to close department-specific alarms #}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination controls -->
+        {% if pagination.total_pages > 1 %}
+        <div class="pagination">
+            {% if pagination.has_prev %}
+                <a href="{{ url_for('admin_alarms', page=pagination.prev_page, dept_id=selected_dept_id, type=alarm_type_filter, search=search_query) }}" class="btn btn-secondary">
+                    ← Föregående
+                </a>
+            {% endif %}
+            
+            <span class="pagination-info">
+                Sida {{ pagination.page }} av {{ pagination.total_pages }}
+            </span>
+            
+            {% if pagination.has_next %}
+                <a href="{{ url_for('admin_alarms', page=pagination.next_page, dept_id=selected_dept_id, type=alarm_type_filter, search=search_query) }}" class="btn btn-secondary">
+                    Nästa →
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+    </div>
+</div>
+
+<script>
+function closeAlarm(alarmId) {
+    if (confirm('Är du säker på att du vill stänga detta larm?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/alarms';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'close';
+        form.appendChild(actionInput);
+        
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'alarm_id';
+        idInput.value = alarmId;
+        form.appendChild(idInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Set current time as default for occurred_at
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    // Format as YYYY-MM-DDTHH:MM for datetime-local input (browser requirement)
+    // But display will show as dd-mm-yyyy in Swedish locale
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    document.getElementById('occurred_at').value = localDateTime;
+});
+
+function sortAlarms() {
+    const sortBy = document.getElementById('sort_by').value;
+    const container = document.getElementById('alarms-container');
+    const articles = Array.from(container.querySelectorAll('article'));
+    
+    articles.sort((a, b) => {
+        // Get type from the data attributes or text content
+        const aType = a.dataset.type || '';
+        const bType = b.dataset.type || '';
+        
+        // Get status (active/ended)
+        const aStatus = a.querySelector('p:last-child')?.textContent.includes('Aktivt') ? 'active' : 'ended';
+        const bStatus = b.querySelector('p:last-child')?.textContent.includes('Aktivt') ? 'active' : 'ended';
+        
+        // Get time from the data attribute or parse from text
+        const aTime = new Date(a.dataset.time || '1970-01-01');
+        const bTime = new Date(b.dataset.time || '1970-01-01');
+        
+        switch(sortBy) {
+            case 'time_desc':
+                return bTime - aTime;
+            case 'time_asc':
+                return aTime - bTime;
+            case 'type_real':
+                if (aType === 'real' && bType !== 'real') return -1;
+                if (bType === 'real' && aType !== 'real') return 1;
+                return bTime - aTime;
+            case 'type_test':
+                if (aType === 'test' && bType !== 'test') return -1;
+                if (bType === 'test' && aType !== 'test') return 1;
+                return bTime - aTime;
+            case 'type_practice':
+                if (aType === 'practice' && bType !== 'practice') return -1;
+                if (bType === 'practice' && aType !== 'practice') return 1;
+                return bTime - aTime;
+            case 'status_active':
+                if (aStatus === 'active' && bStatus !== 'active') return -1;
+                if (bStatus === 'active' && aStatus !== 'active') return 1;
+                return bTime - aTime;
+            case 'status_ended':
+                if (aStatus === 'ended' && bStatus !== 'ended') return -1;
+                if (bStatus === 'ended' && aStatus !== 'active') return 1;
+                return bTime - aTime;
+            default:
+                return bTime - aTime;
+        }
+    });
+    
+    // Clear container and re-append sorted articles
+    container.innerHTML = '';
+    articles.forEach(article => container.appendChild(article));
+}
+
+// Responsive search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search');
+    const typeSelect = document.getElementById('type');
+    
+    if (searchInput) {
+        let searchTimeout;
+        
+        // Real-time search as you type
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const searchTerm = this.value.trim();
+            
+            // Debounce the search to avoid too many requests
+            searchTimeout = setTimeout(() => {
+                updateFilters();
+            }, 300);
+        });
+        
+        // Also trigger search on Enter key
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(searchTimeout);
+                updateFilters();
+            }
+        });
+    }
+    
+    if (typeSelect) {
+        // Type filter change triggers immediate update
+        typeSelect.addEventListener('change', function() {
+            updateFilters();
+        });
+    }
+    
+    function updateFilters() {
+        const searchTerm = searchInput ? searchInput.value.trim() : '';
+        const typeValue = typeSelect ? typeSelect.value : 'real';
+        
+        // Build URL with current parameters
+        const url = new URL(window.location);
+        url.searchParams.set('search', searchTerm);
+        url.searchParams.set('type', typeValue);
+        url.searchParams.set('page', '1'); // Reset to first page when filtering
+        
+        // Preserve department selection
+        const selectedDeptId = '{{ selected_dept_id or "" }}';
+        if (selectedDeptId) {
+            url.searchParams.set('dept_id', selectedDeptId);
+        }
+        
+        // Navigate to the new URL
+        window.location.href = url.toString();
+    }
+    
+    // Export functionality
+    const exportBtn = document.getElementById('export-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            const startDate = document.getElementById('export_start_date').value;
+            const endDate = document.getElementById('export_end_date').value;
+            const alarmType = typeSelect ? typeSelect.value : 'real';
+            const selectedDeptId = '{{ selected_dept_id or "" }}';
+            
+            if (!startDate || !endDate) {
+                alert('Vänligen välj både start- och slutdatum.');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('Startdatumet måste vara före slutdatumet.');
+                return;
+            }
+            
+            // Build export URL
+            const exportUrl = new URL('{{ url_for("export_alarms_attendance_matrix") }}', window.location.origin);
+            exportUrl.searchParams.set('start_date', startDate);
+            exportUrl.searchParams.set('end_date', endDate);
+            exportUrl.searchParams.set('type', alarmType);
+            if (selectedDeptId) {
+                exportUrl.searchParams.set('dept_id', selectedDeptId);
+            }
+            
+            // Open in new window to trigger download
+            window.location.href = exportUrl.toString();
+        });
+    }
+});
+</script>
+{% endblock %}

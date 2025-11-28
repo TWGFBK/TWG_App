@@ -1,0 +1,856 @@
+{% extends "base.html" %}
+
+{% block title %}Hantera användare - Närvarorapportering{% endblock %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="../../static/users.css">
+<div class="grid">
+    <div>
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1>Användare</h1>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <a href="/admin/users/export" class="secondary">Exportera medlemslista</a>
+                <a id="addExistingUserBtn" class="primary" href="#">+ Lägg till existerande användare</a>
+                <a href="/admin/users/add" class="primary">+ Lägg till användare</a>
+            </div>
+        </div>
+        
+        {% if error %}
+        <div class="alert alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <!-- Hidden input for admin departments -->
+        <input type="hidden" id="admin-departments" value='{{ departments|tojson|safe }}'>
+        
+        <!-- Member List -->
+        <div class="member-list-section">
+            <h2>Medlemmar i dina avdelningar ({{ users|length }})</h2>
+            
+            <!-- Search members -->
+            <div class="search-members" style="margin-bottom: 1rem;">
+                <div class="grid">
+                    <div>
+                        <label for="searchMembers">Sök medlemmar:</label>
+                        <input type="text" id="searchMembers" placeholder="Sök efter förnamn eller efternamn..." onkeyup="searchMembers()">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Excel-like table -->
+            <div class="table-container" id="memberList">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th class="col-id">ID</th>
+                            <th class="col-first-name">Förnamn</th>
+                            <th class="col-last-name">Efternamn</th>
+                            <th class="col-phone">Telefon</th>
+                            <th class="col-departments">Avdelningar</th>
+                            <th class="col-numbers">Nummer</th>
+                            <th class="col-roles">Roller</th>
+                            <th class="col-action">Åtgärd</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="member-row" data-name="{{ (user[11] or '') + ' ' + (user[12] or '') }}" data-id="{{ user[0] }}" data-role="{{ user[2] and 'Rökdykare' or '' }}{{ user[3] and 'Lastbilskort' or '' }}{{ user[4] and 'Roll 07' or '' }}{{ user[5] and 'Admin' or '' }}{{ user[6] and 'MD' or '' }}">
+                            <td class="user-id col-id">{{ user[0] }}</td>
+                            <td class="col-first-name">{{ user[11] or '' }}</td>
+                            <td class="col-last-name">{{ user[12] or '' }}</td>
+                            <td class="col-phone">{{ user[1] or 'Ej angiven' }}</td>
+                            <td class="col-departments">{{ user[8]|join(', ') if user[8] else 'Inga' }}</td>
+                            <td class="numbers-cell col-numbers">
+                                {% if user[7] and user[7] != {} %}
+                                    {% for dept_id, number in user[7].items() %}
+                                        {% for dept in departments %}
+                                            {% if dept[0]|string == dept_id|string %}
+                                                {{ dept[1] }}: {{ number }}{% if not loop.last %}<br>{% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="roles-cell col-roles">
+                                {% if user[2] %}<span class="role-badge rd">Rökdykare</span>{% endif %}
+                                {% if user[3] %}<span class="role-badge chafoer">Lastbilskort</span>{% endif %}
+                                {% if user[4] %}<span class="role-badge role07">07</span>{% endif %}
+                                {% if user[5] %}<span class="role-badge admin">Admin</span>{% endif %}
+                                {% if session.is_superadmin and user[6] %}<span class="role-badge md">MD</span>{% endif %}
+                                {% if not user[2] and not user[3] and not user[4] and not user[5] and not (session.is_superadmin and user[6]) %}-{% endif %}
+                            </td>
+                            <td class="action-cell col-action">
+                                <button class="btn btn-primary edit-user-btn" 
+                                        data-user-id="{{ user[0] }}"
+                                        data-first-name="{{ user[11] or '' }}"
+                                        data-last-name="{{ user[12] or '' }}"
+                                        data-phone="{{ user[1] }}"
+                                        data-is-rd="{{ user[2]|lower }}"
+                                        data-is-chafoer="{{ user[3]|lower }}"
+                                        data-role-07="{{ user[4]|lower }}"
+                                        data-is-admin="{{ user[5]|lower }}"
+                                        data-is-md="{{ user[6]|lower }}"
+                                        data-numbers="{{ user[7] }}"
+                                        data-departments="{{ user[9] or [] }}"
+                                        data-nfc-tags="{{ user[10] }}"
+                                >
+                                    Redigera
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="editModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Redigera användare</h2>
+            <button onclick="closeEditModal()" class="close">&times;</button>
+        </div>
+        <form id="editForm" method="POST" action="/admin/users">
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" name="user_id" id="edit_user_id">
+            
+            <div class="grid">
+                <div>
+                    <label for="edit_phone">Telefon:</label>
+                    <input type="tel" id="edit_phone" name="phone">
+                </div>
+                <div>
+                    <label for="edit_password">Lösenord (lämna tomt för att behålla nuvarande):</label>
+                    <input type="text" id="edit_password" name="password" maxlength="10">
+                </div>
+            </div>
+            
+            <div class="grid">
+                <div>
+                    <label for="edit_first_name">Förnamn:</label>
+                    <input type="text" id="edit_first_name" name="first_name" maxlength="50" required>
+                </div>
+                <div>
+                    <label for="edit_last_name">Efternamn:</label>
+                    <input type="text" id="edit_last_name" name="last_name" maxlength="50" required>
+                </div>
+            </div>
+            
+            
+            <fieldset>
+                <legend>Behörigheter</legend>
+                <label>
+                    <input type="checkbox" id="edit_is_rd" name="is_rd" value="1">
+                    Rökdykare
+                </label>
+                <label>
+                    <input type="checkbox" id="edit_is_chafoer" name="is_chafoer" value="1">
+                    Lastbilskort
+                </label>
+                <label>
+                    <input type="checkbox" id="edit_role_07" name="role_07" value="1">
+                    Roll 07
+                </label>
+                <label>
+                    <input type="checkbox" id="edit_is_admin" name="is_admin" value="1">
+                    Administratör
+                </label>
+                {% if session.is_superadmin %}
+                <label>
+                    <input type="checkbox" id="edit_is_md" name="is_md" value="1">
+                    Multi-Department
+                </label>
+                {% endif %}
+            </fieldset>
+            
+            <fieldset>
+                <legend>Avdelningar</legend>
+                {% for dept in departments %}
+                <div class="edit-department-row">
+                    <label class="edit-department-checkbox">
+                        <input type="checkbox" name="departments" value="{{ dept[0] }}" class="edit-department">
+                        {{ dept[2] }} ({{ dept[1] }})
+                    </label>
+                    <div class="edit-nfc-field">
+                        <input type="text" name="nfc_tags_{{ dept[0] }}" placeholder="NFC-tagg för {{ dept[2] }}" pattern="[0-9A-Fa-f]+" title="Ange en giltig NFC-kod (hex)">
+                    </div>
+                    <div class="edit-number-field">
+                        <input type="number" name="numbers_{{ dept[0] }}" placeholder="Nummer för {{ dept[2] }}" min="0" max="999" title="Ange ett nummer mellan 0-999">
+                    </div>
+                </div>
+                {% endfor %}
+            </fieldset>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="closeEditModal()" class="secondary">Avbryt</button>
+                <button type="submit" class="primary">Uppdatera användare</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Search Existing User Modal -->
+<div id="searchModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Lägg till existerande användare</h2>
+            <button onclick="closeSearchModal()" class="close">&times;</button>
+        </div>
+        <div class="search-form">
+            <div class="grid">
+                <div>
+                    <label for="search_user_id">Sök användare (ID):</label>
+                    <input type="text" id="search_user_id" placeholder="t.ex. 0001" pattern="[0-9]{4}" maxlength="4">
+                    <button onclick="searchUser()" class="secondary">Sök</button>
+                </div>
+            </div>
+            <div id="search-results" style="margin-top: 1rem;"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+.modal-header h2 {
+    margin: 0;
+}
+
+.close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--pico-muted-color);
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close:hover {
+    color: var(--pico-color);
+}
+
+.edit-department-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: var(--pico-border-radius);
+}
+
+.edit-department-checkbox {
+    flex: 1;
+    margin: 0;
+}
+
+.edit-nfc-field {
+    flex: 1;
+    min-width: 200px;
+}
+
+.edit-nfc-field input {
+    width: 100%;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.edit-number-field {
+    flex: 1;
+    min-width: 150px;
+}
+
+.edit-number-field input {
+    width: 100%;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+/* Mobile responsive styles for edit department section */
+@media (max-width: 768px) {
+    .edit-department-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .edit-department-checkbox {
+        width: 100%;
+    }
+    
+    .edit-nfc-field {
+        min-width: 0;
+        width: 100%;
+    }
+    
+    .edit-number-field {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+/* Fix input field alignment in modal */
+.modal .grid > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.modal .grid label {
+    margin-bottom: 0.5rem;
+}
+
+.modal .grid input {
+    height: 2.5rem;
+}
+
+/* Mobile-first: Default styles for mobile */
+.modal {
+    padding: 1rem;
+}
+
+.modal-content {
+    max-width: 100%;
+    width: 100%;
+    margin: 1rem auto;
+}
+
+.search-form {
+    padding: 0 1rem;
+}
+
+/* Make Redigera buttons larger on desktop screens */
+@media (min-width: 768px) {
+    .member-actions .edit-user-btn {
+        padding: 0.75rem 1.5rem !important;
+        font-size: 1rem !important;
+        min-width: 120px !important;
+        height: auto !important;
+    }
+    
+    .member-actions {
+        margin-top: 0.75rem;
+    }
+    
+    /* Make modal window larger on desktop */
+    .modal {
+        padding: 2rem !important;
+    }
+    
+    .modal-content {
+        max-width: 800px !important;
+        width: 90% !important;
+        margin: 2rem auto !important;
+    }
+    
+    .search-form {
+        padding: 0 2rem;
+    }
+}
+</style>
+
+<script>
+
+    function editUser(userId, firstName, lastName, phone, isRd, isChafoer, role07, isAdmin, isMd, numbers, departments, nfcTags) {
+    
+    try {
+        // Parse JSON strings if they're strings
+        let departmentsArray = departments;
+        let nfcTagsObj = nfcTags;
+        let numbersObj = numbers;
+        
+        if (typeof departments === 'string') {
+            departmentsArray = JSON.parse(departments);
+        }
+        if (typeof nfcTags === 'string') {
+            nfcTagsObj = JSON.parse(nfcTags);
+        }
+        if (typeof numbers === 'string') {
+            numbersObj = JSON.parse(numbers);
+        }
+        
+        // Ensure departmentsArray is always an array
+        if (!Array.isArray(departmentsArray)) {
+            console.warn('departments is not an array, converting to array:', departmentsArray);
+            departmentsArray = [];
+        }
+        
+        // Ensure nfcTagsObj is always an object
+        if (!nfcTagsObj || typeof nfcTagsObj !== 'object') {
+            console.warn('nfcTags is not an object, converting to object:', nfcTagsObj);
+            nfcTagsObj = {};
+        }
+        
+        // Ensure numbersObj is always an object
+        if (!numbersObj || typeof numbersObj !== 'object') {
+            console.warn('numbers is not an object, converting to object:', numbersObj);
+            numbersObj = {};
+        }
+        
+        // Populate the edit form
+        document.getElementById('edit_user_id').value = userId;
+        document.getElementById('edit_first_name').value = firstName || '';
+        document.getElementById('edit_last_name').value = lastName || '';
+        document.getElementById('edit_phone').value = phone || '';
+        document.getElementById('edit_password').value = ''; // Don't pre-fill password
+        
+        // Set checkboxes
+        document.getElementById('edit_is_rd').checked = isRd;
+        document.getElementById('edit_is_chafoer').checked = isChafoer;
+        document.getElementById('edit_role_07').checked = role07;
+        document.getElementById('edit_is_admin').checked = isAdmin;
+        const mdCheckbox = document.getElementById('edit_is_md');
+        if (mdCheckbox) {
+            mdCheckbox.checked = isMd;
+        }
+        
+        // Set departments and NFC tags
+        const deptCheckboxes = document.querySelectorAll('.edit-department');
+        
+        // nfcTagsObj is already the correct format
+        
+        deptCheckboxes.forEach(checkbox => {
+            const isChecked = departmentsArray.includes(parseInt(checkbox.value));
+            checkbox.checked = isChecked;
+            
+            // Populate existing NFC tag if available
+            const nfcInput = checkbox.closest('.edit-department-row').querySelector('.edit-nfc-field input');
+            if (nfcInput && nfcTagsObj[checkbox.value]) {
+                nfcInput.value = nfcTagsObj[checkbox.value];
+            }
+            
+            // Populate existing number if available
+            const numberInput = checkbox.closest('.edit-department-row').querySelector('.edit-number-field input');
+            if (numberInput && numbersObj[checkbox.value]) {
+                numberInput.value = numbersObj[checkbox.value];
+            }
+        });
+        
+        // Show modal
+        const modal = document.getElementById('editModal');
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error in editUser function:', error);
+    }
+}
+
+// Add event listeners for edit buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Make admin departments available to JavaScript
+    const adminDeptInput = document.getElementById('admin-departments');
+    
+    try {
+        window.adminDepartments = adminDeptInput ? JSON.parse(adminDeptInput.value) : [];
+    } catch (e) {
+        console.error('Error parsing admin departments JSON:', e);
+        window.adminDepartments = [];
+    }
+    
+    // Add event listener for "Lägg till existerande användare" button
+    const addExistingUserBtn = document.getElementById('addExistingUserBtn');
+    if (addExistingUserBtn) {
+        addExistingUserBtn.addEventListener('click', function() {
+            openSearchModal();
+        });
+    }
+    
+    const editButtons = document.querySelectorAll('.edit-user-btn');
+    
+    editButtons.forEach((button, index) => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const firstName = this.getAttribute('data-first-name');
+            const lastName = this.getAttribute('data-last-name');
+            const phone = this.getAttribute('data-phone');
+            const isRd = this.getAttribute('data-is-rd') === 'true';
+            const isChafoer = this.getAttribute('data-is-chafoer') === 'true';
+            const role07 = this.getAttribute('data-role-07') === 'true';
+            const isAdmin = this.getAttribute('data-is-admin') === 'true';
+            const isMd = this.getAttribute('data-is-md') === 'true';
+            const numbersStr = this.getAttribute('data-numbers') || '{}';
+            const departmentsStr = this.getAttribute('data-departments') || '[]';
+            const nfcTagsStr = this.getAttribute('data-nfc-tags') || '{}';
+            
+            
+            let departments = [];
+            let nfcTags = {};
+            let numbers = {};
+            
+            try {
+                departments = JSON.parse(departmentsStr);
+            } catch (e) {
+                departments = [];
+            }
+            
+            try {
+                if (typeof nfcTagsStr === 'string') {
+                    // Convert Python dict format to JSON format (single quotes to double quotes)
+                    const nfcTagsJson = nfcTagsStr.replace(/'/g, '"');
+                    nfcTags = JSON.parse(nfcTagsJson);
+                } else {
+                    nfcTags = nfcTagsStr || {};
+                }
+            } catch (e) {
+                nfcTags = {};
+            }
+            
+            try {
+                if (typeof numbersStr === 'string') {
+                    // Convert Python dict format to JSON format (single quotes to double quotes)
+                    const numbersJson = numbersStr.replace(/'/g, '"');
+                    numbers = JSON.parse(numbersJson);
+                } else {
+                    numbers = numbersStr || {};
+                }
+            } catch (e) {
+                numbers = {};
+            }
+            
+            
+            editUser(userId, firstName, lastName, phone, isRd, isChafoer, role07, isAdmin, isMd, numbers, departments, nfcTags);
+        });
+    });
+    
+    // Add enter key support for search
+    document.getElementById('search_user_id').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchUser();
+        }
+    });
+});
+
+function searchUser() {
+    const userId = document.getElementById('search_user_id').value.trim();
+    const resultsDiv = document.getElementById('search-results');
+    
+    if (!userId || userId.length !== 4) {
+        resultsDiv.innerHTML = '<p style="color: #dc3545;">Ange ett giltigt 4-siffrigt ID</p>';
+        return;
+    }
+    
+    // Show loading
+    resultsDiv.innerHTML = '<p>Söker...</p>';
+    
+    fetch(`/api/search-user/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                resultsDiv.innerHTML = `<p style="color: #dc3545;">${data.error}</p>`;
+            } else {
+                displaySearchResult(data);
+            }
+        })
+        .catch(error => {
+            resultsDiv.innerHTML = '<p style="color: #dc3545;">Ett fel uppstod vid sökning</p>';
+            console.error('Search error:', error);
+        });
+}
+
+function displaySearchResult(user) {
+    const resultsDiv = document.getElementById('search-results');
+    
+    const isInMyDepartments = user.in_my_departments;
+    
+    if (isInMyDepartments) {
+        // User is already in your departments - show edit button
+        resultsDiv.innerHTML = `
+            <div class="member-card" style="margin: 1rem 0;">
+                <div class="member-header">
+                    <div class="member-title">
+                        <h3>${user.first_name || 'Namn'} ${user.last_name || 'Saknas'}</h3>
+                        <span class="member-id">${user.id}</span>
+                    </div>
+                </div>
+                
+                <div class="member-details">
+                    <div class="detail-row">
+                        <span class="label">Telefon:</span>
+                        <span class="value">${user.phone || 'Ej angiven'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Avdelningar:</span>
+                        <span class="value">${user.department_codes.length > 0 ? user.department_codes.join(', ') : 'Inga'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Roller:</span>
+                        <span class="value">
+                            ${user.is_rd ? '<span class="role-badge rd">Rökdykare</span>' : ''}
+                            ${user.is_chafoer ? '<span class="role-badge chafoer">Lastbilskort</span>' : ''}
+                            ${user.role_07 ? '<span class="role-badge role07">Roll 07</span>' : ''}
+                            ${user.is_admin ? '<span class="role-badge admin">Admin</span>' : ''}
+                            ${user.is_md ? '<span class="role-badge md">MD</span>' : ''}
+                            ${!user.is_rd && !user.is_chafoer && !user.role_07 && !user.is_admin && !user.is_md ? 'Inga' : ''}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="member-actions">
+                    <button class="btn btn-secondary search-edit-btn" 
+                            data-user-id="${user.id}"
+                            data-first-name="${user.first_name || ''}"
+                            data-last-name="${user.last_name || ''}"
+                            data-phone="${user.phone}"
+                            data-is-rd="${user.is_rd}"
+                            data-is-chafoer="${user.is_chafoer}"
+                            data-role-07="${user.role_07}"
+                            data-is-admin="${user.is_admin}"
+                            data-is-md="${user.is_md || false}"
+                            data-departments='${JSON.stringify(user.departments)}'
+                            data-nfc-tags='${JSON.stringify(user.nfc_tags)}'
+                            data-numbers='${JSON.stringify(user.numbers)}'>Visa detaljer</button>
+                    <button onclick="closeSearchResults()" class="btn btn-primary">Stäng</button>
+                </div>
+            </div>
+        `;
+    } else {
+        // User is not in your departments - show department selection
+        resultsDiv.innerHTML = `
+            <div class="member-card" style="margin: 1rem 0;">
+                <div class="member-header">
+                    <div class="member-title">
+                        <h3>${user.first_name || 'Namn'} ${user.last_name || 'Saknas'}</h3>
+                        <span class="member-id">${user.id}</span>
+                    </div>
+                </div>
+                
+                <div class="member-details">
+                    <div class="detail-row">
+                        <span class="label">Telefon:</span>
+                        <span class="value">${user.phone || 'Ej angiven'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Avdelningar:</span>
+                        <span class="value">${user.department_codes.length > 0 ? user.department_codes.join(', ') : 'Inga'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Roller:</span>
+                        <span class="value">
+                            ${user.is_rd ? '<span class="role-badge rd">Rökdykare</span>' : ''}
+                            ${user.is_chafoer ? '<span class="role-badge chafoer">Lastbilskort</span>' : ''}
+                            ${user.role_07 ? '<span class="role-badge role07">Roll 07</span>' : ''}
+                            ${user.is_admin ? '<span class="role-badge admin">Admin</span>' : ''}
+                            ${user.is_md ? '<span class="role-badge md">MD</span>' : ''}
+                            ${!user.is_rd && !user.is_chafoer && !user.role_07 && !user.is_admin && !user.is_md ? 'Inga' : ''}
+                        </span>
+                    </div>
+                </div>
+                
+                <div style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 0.375rem;">
+                    <p><strong>Välj avdelningar att lägga till användaren i:</strong></p>
+                    <div id="department-selection-${user.id}" style="margin: 0.5rem 0;">
+                        <!-- Department checkboxes will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="member-actions">
+                    <button onclick="addUserToSelectedDepartments('${user.id}')" class="btn btn-primary">Lägg till i valda avdelningar</button>
+                    <button onclick="closeSearchResults()" class="btn btn-secondary">Stäng</button>
+                </div>
+            </div>
+        `;
+        
+        // Populate department checkboxes
+        populateDepartmentSelection(user.id);
+    }
+    
+    // Add event listener for search edit button
+    const searchEditBtn = resultsDiv.querySelector('.search-edit-btn');
+    if (searchEditBtn) {
+        searchEditBtn.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const firstName = this.getAttribute('data-first-name');
+            const lastName = this.getAttribute('data-last-name');
+            const phone = this.getAttribute('data-phone');
+            const isRd = this.getAttribute('data-is-rd') === 'true';
+            const isChafoer = this.getAttribute('data-is-chafoer') === 'true';
+            const role07 = this.getAttribute('data-role-07') === 'true';
+            const isAdmin = this.getAttribute('data-is-admin') === 'true';
+            const isMd = this.getAttribute('data-is-md') === 'true';
+            const departments = JSON.parse(this.getAttribute('data-departments'));
+            const nfcTags = JSON.parse(this.getAttribute('data-nfc-tags'));
+            const numbers = JSON.parse(this.getAttribute('data-numbers'));
+            
+            // Close the search modal before opening the edit modal
+            closeSearchModal();
+            
+            editUser(userId, firstName, lastName, phone, isRd, isChafoer, role07, isAdmin, isMd, numbers, departments, nfcTags);
+        });
+    }
+}
+
+function populateDepartmentSelection(userId) {
+    // Get the current admin's departments from the page data
+    const adminDepartments = window.adminDepartments || [];
+    
+    const container = document.getElementById(`department-selection-${userId}`);
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (adminDepartments.length === 0) {
+        container.innerHTML = '<p style="color: red;">Inga avdelningar tillgängliga för val.</p>';
+        return;
+    }
+    
+    adminDepartments.forEach(dept => {
+        const checkbox = document.createElement('label');
+        checkbox.style.display = 'block';
+        checkbox.style.marginBottom = '0.5rem';
+        checkbox.innerHTML = `
+            <input type="checkbox" value="${dept[0]}" class="dept-checkbox-${userId}">
+            ${dept[2]} (${dept[1]})
+        `;
+        container.appendChild(checkbox);
+    });
+}
+
+function addUserToSelectedDepartments(userId) {
+    const checkboxes = document.querySelectorAll(`.dept-checkbox-${userId}:checked`);
+    const selectedDeptIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    if (selectedDeptIds.length === 0) {
+        alert('Välj minst en avdelning att lägga till användaren i.');
+        return;
+    }
+    
+    if (confirm(`Vill du lägga till denna användare i ${selectedDeptIds.length} valda avdelning(ar)?`)) {
+        fetch('/api/add-user-to-departments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                user_id: userId,
+                department_ids: selectedDeptIds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Användare tillagd i valda avdelningar!');
+                closeSearchResults();
+                // Optionally refresh the page or update the UI
+                window.location.reload();
+            } else {
+                alert('Ett fel uppstod: ' + (data.error || 'Okänt fel'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ett fel uppstod vid tillägg av användare');
+        });
+    }
+}
+
+function addUserToMyDepartments(userId) {
+    // This function is now deprecated in favor of addUserToSelectedDepartments
+    // But keeping it for backward compatibility
+    if (confirm('Vill du lägga till denna användare i dina avdelningar?')) {
+        fetch('/api/add-user-to-departments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id: userId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Användaren har lagts till i dina avdelningar!');
+                location.reload(); // Refresh to show updated user list
+            } else {
+                alert('Ett fel uppstod: ' + (data.error || 'Okänt fel'));
+            }
+        })
+        .catch(error => {
+            alert('Ett fel uppstod vid tillägg av användare');
+            console.error('Add user error:', error);
+        });
+    }
+}
+
+function closeSearchResults() {
+    document.getElementById('search-results').innerHTML = '';
+    document.getElementById('search_user_id').value = '';
+}
+
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+function openSearchModal() {
+    document.getElementById('searchModal').style.display = 'block';
+}
+
+function closeSearchModal() {
+    document.getElementById('searchModal').style.display = 'none';
+    // Clear search results and input
+    document.getElementById('search-results').innerHTML = '';
+    document.getElementById('search_user_id').value = '';
+}
+
+function searchMembers() {
+    const searchTerm = document.getElementById('searchMembers').value.toLowerCase();
+    const memberRows = document.querySelectorAll('.member-row');
+    let visibleCount = 0;
+    
+    memberRows.forEach(row => {
+        const name = row.getAttribute('data-name').toLowerCase();
+        
+        // Check if search term matches the full name (first name + last name)
+        if (name.includes(searchTerm)) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update the count in the title
+    const title = document.querySelector('.member-list-section h2');
+    const totalCount = document.querySelectorAll('.member-row').length;
+    if (searchTerm === '') {
+        title.textContent = `Medlemmar i dina avdelningar (${totalCount})`;
+    } else {
+        title.textContent = `Medlemmar i dina avdelningar (${visibleCount} av ${totalCount})`;
+    }
+}
+
+
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const editModal = document.getElementById('editModal');
+    
+    if (event.target === editModal) {
+        closeEditModal();
+    }
+}
+</script>
+{% endblock %}

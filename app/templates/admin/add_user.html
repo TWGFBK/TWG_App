@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Lägg till användare - Brandkåren{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="../../static/add_user.css">
+<div class="grid">
+    <div>
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1>Lägg till användare</h1>
+            <a href="/admin/users" class="secondary">← Tillbaka till användare</a>
+        </div>
+        
+        {% if error %}
+        <div class="alert alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <form id="userForm" method="POST" action="/admin/users/add">
+            <input type="hidden" name="action" value="create">
+            
+            <div class="grid">
+                <div>
+                    <label for="id">ID (4 siffror):</label>
+                    <input type="text" id="id" name="id" pattern="[0-9]{4}" maxlength="4" required>
+                </div>
+                <div>
+                    <label for="phone">Telefon:</label>
+                    <input type="tel" id="phone" name="phone" placeholder="3584573435515">
+                </div>
+                <div>
+                    <label for="password">Lösenord:</label>
+                    <input type="text" id="password" name="password" maxlength="10" required>
+                </div>
+            </div>
+            
+            <div class="grid">
+                <div>
+                    <label for="first_name">Förnamn:</label>
+                    <input type="text" id="first_name" name="first_name" maxlength="50" required>
+                </div>
+                <div>
+                    <label for="last_name">Efternamn:</label>
+                    <input type="text" id="last_name" name="last_name" maxlength="50" required>
+                </div>
+            </div>
+            
+            <fieldset>
+                <legend>Behörigheter</legend>
+                <label>
+                    <input type="checkbox" name="is_rd" value="1">
+                    Rökdykare
+                </label>
+                <label>
+                    <input type="checkbox" name="is_chafoer" value="1">
+                    Lastbilskort
+                </label>
+                <label>
+                    <input type="checkbox" name="role_07" value="1">
+                    Roll 07
+                </label>
+                <label>
+                    <input type="checkbox" name="is_admin" value="1">
+                    Administratör
+                </label>
+            </fieldset>
+            
+            <fieldset>
+                <legend>Avdelningar</legend>
+                {% if departments %}
+                    {% for dept in departments %}
+                    <div class="department-row">
+                        <label class="department-checkbox">
+                            <input type="checkbox" name="departments" value="{{ dept[0] }}" onchange="toggleNfcField(this)">
+                            {{ dept[2] }} ({{ dept[1] }})
+                        </label>
+                        <div class="nfc-field" style="display: none;">
+                            <input type="text" name="nfc_tags_{{ dept[0] }}" placeholder="NFC-tagg för {{ dept[2] }}" pattern="[0-9A-Fa-f]+" title="Ange en giltig NFC-kod (hex)">
+                        </div>
+                        <div class="number-field" style="display: none;">
+                            <input type="number" name="numbers_{{ dept[0] }}" placeholder="Nummer för {{ dept[2] }}" min="0" max="999" title="Ange ett nummer mellan 0-999">
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: #b1080b;">Inga avdelningar tillgängliga. Kontrollera att du är inloggad som admin.</p>
+                {% endif %}
+            </fieldset>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <a href="/admin/users" class="secondary">Avbryt</a>
+                <button type="submit" class="primary">Skapa användare</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.department-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #525252;
+    border-radius: 0.375rem;
+}
+
+.department-checkbox {
+    flex: 1;
+    margin: 0;
+}
+
+.nfc-field, .number-field {
+    flex: 1;
+    min-width: 200px;
+}
+
+.nfc-field input, .number-field input {
+    width: 100%;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+</style>
+
+<script>
+function toggleNfcField(checkbox) {
+    const departmentRow = checkbox.closest('.department-row');
+    const nfcField = departmentRow.querySelector('.nfc-field');
+    const numberField = departmentRow.querySelector('.number-field');
+    
+    if (checkbox.checked) {
+        nfcField.style.display = 'block';
+        numberField.style.display = 'block';
+    } else {
+        nfcField.style.display = 'none';
+        numberField.style.display = 'none';
+        // Clear the fields when department is unchecked
+        const nfcInput = nfcField.querySelector('input');
+        const numberInput = numberField.querySelector('input');
+        if (nfcInput) nfcInput.value = '';
+        if (numberInput) numberInput.value = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Prevent Enter key from doing anything
+    const inputs = document.querySelectorAll('input[type="text"], input[type="tel"], input[type="password"]');
+    inputs.forEach(input => {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                console.log('Enter pressed, preventing default');
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

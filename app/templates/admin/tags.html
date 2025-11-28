@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Hantera NFC-taggar - Närvarorapportering{% endblock %}
+
+{% block content %}
+<div class="grid">
+    <div>
+        <h1>Hantera NFC-taggar</h1>
+        
+        <h2>Lägg till NFC-tagg</h2>
+        
+        {% if error %}
+        <div class="alert alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('admin_tags') }}">
+            <div class="grid">
+                <div>
+                    <label for="raw_uid">Raw UID (från läsare):</label>
+                    <input type="text" id="raw_uid" name="raw_uid" required>
+                </div>
+                <div>
+                    <label for="user_id">Användare:</label>
+                    <select id="user_id" name="user_id" required>
+                        <option value="">Välj användare</option>
+                        {% for user in users %}
+                        <option value="{{ user[0] }}">{{ user[0] }} - {{ user[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="label">Etikett (valfritt):</label>
+                    <input type="text" id="label" name="label">
+                </div>
+            </div>
+            
+            <fieldset>
+                <legend>Avdelningar</legend>
+                {% for dept in departments %}
+                <label>
+                    <input type="checkbox" name="departments" value="{{ dept[0] }}">
+                    {{ dept[2] }} ({{ dept[1] }})
+                </label>
+                {% endfor %}
+            </fieldset>
+            
+            <button type="submit" name="action" value="create">Skapa tagg</button>
+        </form>
+        
+        <hr>
+        
+        <h2>Befintliga taggar</h2>
+        <div class="grid">
+            {% for tag in tags %}
+            <article>
+                <header>
+                    <h3>{{ tag[3] or 'Tagg ' + tag[0]|string }}</h3>
+                    <p>Användare: {{ tag[7] }} ({{ tag[8] }})</p>
+                </header>
+                
+                <p><strong>Status:</strong> {{ tag[4] }}</p>
+                <p><strong>Skapad:</strong> {{ tag[6].strftime('%Y-%m-%d %H:%M') }}</p>
+                {% if tag[7] %}
+                <p><strong>Avdelningar:</strong> {{ tag[9]|join(', ') if tag[9] else 'Inga' }}</p>
+                {% endif %}
+                
+                <footer>
+                    {% if tag[4] == 'active' %}
+                    <button onclick="revokeTag({{ tag[0] }})" class="secondary">
+                        Återkalla
+                    </button>
+                    {% else %}
+                    <span class="secondary">Återkallad</span>
+                    {% endif %}
+                </footer>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function revokeTag(tagId) {
+    if (confirm('Är du säker på att du vill återkalla denna tagg?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("admin_tags") }}';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'revoke';
+        form.appendChild(actionInput);
+        
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'tag_id';
+        idInput.value = tagId;
+        form.appendChild(idInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

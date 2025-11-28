@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Skapa larm{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Skapa larm</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <form method="POST" class="alarm-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="kind">Typ:</label>
+                <select id="kind" name="kind" required>
+                    <option value="real" selected>Larm</option>
+                    <option value="test">Test</option>
+                    <option value="practice">Övning</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="alarm_type">Typ (detaljerad):</label>
+                <input type="text" id="alarm_type" name="alarm_type" placeholder="t.ex. Grundalarm, Beredskap">
+            </div>
+            
+            <div class="form-group">
+                <label for="what">Vad:</label>
+                <input type="text" id="what" name="what" placeholder="Beskrivning av händelse" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="where_location">Var:</label>
+                <input type="text" id="where_location" name="where_location" placeholder="Plats/Adress" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="who_called">Larmade:</label>
+                <input type="text" id="who_called" name="who_called" placeholder="Vem larmade (t.ex. Inbyggd)">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="occurred_at">Starttid:</label>
+                <input type="datetime-local" id="occurred_at" name="occurred_at" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="ended_at">Sluttid (valfritt):</label>
+                <input type="datetime-local" id="ended_at" name="ended_at">
+            </div>
+        </div>
+        
+        <hr>
+        
+        <div class="form-group">
+            <label>Avdelningar:</label>
+            <div class="checkbox-group">
+                {% for dept in departments %}
+                <label class="checkbox-label">
+                    <input type="checkbox" name="departments" value="{{ dept[0] }}">
+                    {{ dept[2] }} ({{ dept[1] }})
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Skapa larm</button>
+            <a href="{{ url_for('admin_alarms') }}" class="btn btn-secondary">Avbryt</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.container h1 {
+    color: white;
+}
+
+.alarm-form {
+    background: #121212;
+    border: 1px solid #525252;
+    border-radius: 8px;
+    padding: 30px;
+    margin-top: 20px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: white;
+}
+
+.form-group input,
+.form-group select {
+    padding: 10px;
+    border: 1px solid #525252;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #121212;
+    color: white;
+}
+
+.form-group input::placeholder {
+    color: #525252;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #0050a3;
+    box-shadow: 0 0 0 2px rgba(0, 80, 163, 0.25);
+}
+
+.checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: #121212;
+    border: 1px solid #525252;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: white;
+}
+
+.checkbox-label:hover {
+    background: #1a1a1a;
+    border-color: #0050a3;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #525252;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #0050a3;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #003d7a;
+}
+
+.btn-secondary {
+    background: #525252;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #3a3a3a;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.alert-danger {
+    background: rgba(177, 8, 11, 0.2);
+    border-color: #b1080b;
+    color: #ff6b6e;
+}
+
+.alert-success {
+    background: rgba(0, 130, 55, 0.2);
+    border-color: #008237;
+    color: #4ade80;
+}
+
+hr {
+    margin: 20px 0;
+    border: none;
+    border-top: 1px solid #525252;
+}
+</style>
+
+<script>
+// Set default start time to current time
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    document.getElementById('occurred_at').value = localDateTime;
+});
+</script>
+{% endblock %}

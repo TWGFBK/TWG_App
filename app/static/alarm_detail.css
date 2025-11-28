@@ -1,0 +1,474 @@
+.search-section {
+    margin-bottom: 20px;
+}
+
+.search-container {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.search-container input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    height: 50px;
+    font-size: 1.1rem;
+}
+
+.search-container .btn {
+    box-sizing: border-box;
+    height: 50px;
+    padding: 12px 24px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-results {
+    margin-top: 15px;
+}
+
+.user-result {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info h4 {
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.user-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.department-selection {
+    margin-top: 10px;
+}
+
+.department-selection label {
+    display: block;
+    margin: 5px 0;
+}
+
+.department-selection input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.manual-attendance-form {
+    margin-top: 15px;
+    padding: 15px;
+    background: #e9ecef;
+    border-radius: 5px;
+}
+
+.manual-attendance-form h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.form-group {
+    margin: 10px 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+/* Comments Section */
+.comments-section {
+    margin: 20px 0;
+}
+
+.comments-section h2 {
+    margin-bottom: 20px;
+}
+
+.comments-list {
+    margin-bottom: 30px;
+}
+
+.comment {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.comment header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.comment header h3 {
+    margin: 0;
+    color: #495057;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.comment header time {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.comment p {
+    margin: 0;
+    color: #333;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.comment-form {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.comment-form h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.comment-form .form-group {
+    margin-bottom: 15px;
+}
+
+.comment-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.comment-form textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.comment-form button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.comment-form button:hover {
+    background: #0056b3;
+}
+
+.comment-form button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Department Selector */
+.department-selector {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.department-selector h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.department-selector p {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.dept-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.dept-buttons .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.dept-buttons .btn-primary {
+    background: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}
+
+.dept-buttons .btn-primary:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+}
+
+.dept-buttons .btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: 1px solid #6c757d;
+}
+
+.dept-buttons .btn-secondary:hover {
+    background: #545b62;
+    border-color: #545b62;
+}
+
+.current-dept {
+    background: #e9ecef;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 0;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Who was 07 Section */
+.who-was-07-section {
+    margin: 20px 0;
+}
+
+.who-was-07-section h2 {
+    margin-bottom: 20px;
+}
+
+.current-who-was-07 {
+    background: #e9ecef;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.current-who-was-07 p {
+    margin: 0;
+    color: #333;
+    font-weight: 500;
+}
+
+.who-was-07-section .search-section {
+    margin-bottom: 15px;
+}
+
+.who-was-07-section .search-container {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.who-was-07-section .search-container input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.who-was-07-section .search-results {
+    margin-top: 15px;
+}
+
+.who-was-07-section .search-results .user-result {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.who-was-07-section .search-results .user-result:hover {
+    background: #e9ecef;
+}
+
+.who-was-07-section .search-results .user-result h4 {
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.who-was-07-section .search-results .user-result p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Override Pico CSS grey text colors - make table headers and car card headings black */
+table th {
+    color: #000 !important;
+}
+
+/* Align table cells vertically - ensure button aligns with Anmäld text */
+.attendance-table-wrapper table td {
+    vertical-align: middle;
+}
+
+.attendance-table-wrapper table td:nth-child(2) {
+    vertical-align: middle;
+}
+
+.attendance-table-wrapper table td:nth-child(3) {
+    vertical-align: middle;
+}
+
+.attendance-table-wrapper table td .remove-attendance {
+    margin: 0;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.car-dropzone h4 {
+    color: #000 !important;
+}
+
+/* Bottom buttons container - align buttons and center middle button */
+.bottom-buttons-container {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 20px 0 !important;
+    flex-wrap: wrap !important;
+}
+
+.bottom-button-left {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.bottom-button-center {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    order: 2 !important;
+}
+
+.bottom-button-right {
+    flex: 1 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    order: 3 !important;
+}
+
+/* Ensure all buttons in the container have consistent alignment */
+.bottom-buttons-container a[role="button"],
+.bottom-buttons-container .btn {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Mobile: stack buttons vertically */
+@media screen and (max-width: 768px) {
+    .bottom-buttons-container {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .bottom-button-left,
+    .bottom-button-center,
+    .bottom-button-right {
+        flex: 1 1 100% !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }
+    
+    .bottom-button-left {
+        order: 1 !important;
+    }
+    
+    .bottom-button-center {
+        order: 2 !important;
+    }
+    
+    .bottom-button-right {
+        order: 3 !important;
+    }
+    
+    .bottom-buttons-container a[role="button"],
+    .bottom-buttons-container .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}

@@ -1,0 +1,347 @@
+.no-alarms-container {
+    height: calc(100vh - 250px);
+    min-height: 500px;
+    background: url('brandbil_trans.png') center center / 160% auto no-repeat;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.response-options {
+    margin: 15px 0;
+}
+
+.time-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.time-buttons button {
+    flex: 1;
+    min-width: 80px;
+    min-height: 44px;
+    padding: 10px 16px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.action-buttons button {
+    flex: 1;
+    min-width: 120px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.secondary-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+
+.secondary-buttons .btn {
+    width: calc((100% - 30px) / 4);
+    min-height: 44px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.display-button {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.maps-button {
+    background: #008237;
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    min-height: 44px;
+    padding: 10px 16px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: none;
+    flex: 1;
+    min-width: 80px;
+}
+
+.custom-time-input-section {
+    margin: 20px 0;
+}
+
+.custom-minutes-modal-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid #525252;
+    border-radius: 5px;
+    font-size: 16px;
+    min-height: 44px;
+    background: #0b1118;
+    color: #e5e7eb;
+}
+
+.custom-minutes-modal-input:focus {
+    outline: none;
+    border-color: #0050a3;
+    box-shadow: 0 0 0 .25rem rgba(0, 80, 163, .25);
+}
+
+.custom-minutes-modal-input::placeholder {
+    color: #9aa4b2;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: #121212;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: #e5e7eb;
+}
+
+.modal-content h3 {
+    color: #e5e7eb;
+    margin-top: 0;
+}
+
+.modal-content p {
+    color: #e5e7eb;
+}
+
+.comment-section {
+    margin: 20px 0;
+}
+
+.comment-section label {
+    display: block;
+    margin: 10px 0 5px 0;
+    font-weight: bold;
+    color: #e5e7eb;
+}
+
+.comment-section select,
+.comment-section textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #525252;
+    border-radius: 5px;
+    font-size: 16px;
+    background: #0b1118;
+    color: #e5e7eb;
+}
+
+.comment-section select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    color-scheme: dark;
+}
+
+.comment-section select:focus,
+.comment-section textarea:focus {
+    outline: none;
+    border-color: #0050a3;
+    box-shadow: 0 0 0 .25rem rgba(0, 80, 163, .25);
+}
+
+.comment-section select option {
+    background: #0b1118;
+    color: #e5e7eb;
+}
+
+.comment-section textarea::placeholder {
+    color: #9aa4b2;
+}
+
+.comment-section textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: #008237;
+    color: white;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary:hover {
+    background: #009944;
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    background: #525252;
+    color: white;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-secondary:hover {
+    background: #6a6a6a;
+    opacity: 0.9;
+}
+
+.btn-warning {
+    background: #0050a3;
+    color: white;
+    min-height: 44px;
+    padding: 10px 16px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-success {
+    background: #008237;
+    color: white;
+    min-height: 44px;
+    padding: 10px 16px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-danger {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-info {
+    background: #0050a3;
+    color: white;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-outline-primary {
+    background: #0050a3;
+    color: white;
+    border: 1px solid #0050a3;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    display: inline-block;
+    margin-top: 10px;
+    min-height: 44px;
+}
+
+.btn-secondary-outline {
+    background: transparent;
+    color: white;
+    border: 3px solid #0050a3;
+    text-decoration: none;
+    padding: 10px 16px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    box-sizing: border-box;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.btn-secondary-outline:hover {
+    background: rgba(0, 80, 163, 0.2);
+}
+
+.btn-tertiary {
+    background: none;
+    color: white;
+    border: none;
+    text-decoration: underline;
+    padding: 0;
+    font-size: 16px;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.btn-tertiary:hover {
+    opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .time-buttons {
+        flex-direction: column;
+    }
+    
+    .time-buttons button {
+        width: 100%;
+    }
+    
+    .secondary-buttons {
+        flex-direction: column;
+    }
+    
+    .secondary-buttons .btn {
+        width: 100%;
+    }
+    
+    .modal-content {
+        padding: 20px;
+        margin: 20px;
+    }
+}

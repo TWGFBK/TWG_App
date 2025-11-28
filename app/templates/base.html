@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="sv" data-theme="dark" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TWG{% endblock %}</title>
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='brandbil_trans.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='brandbil_trans.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#12171f">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
+
+</head>
+<body style="display: flex; flex-direction: column; min-height: 100vh;">
+    <main class="container" style="flex: 1;">
+        {% if session.user_id %}
+        {% block nav %}
+        <nav>
+            <a href="{{ url_for('home') }}" class="back-button" title="Tillbaka till hem">←</a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('home') }}">Hem</a></li>
+                <li><a href="{{ url_for('profile') }}">Profil</a></li>
+                {% if session.is_admin or session.is_superadmin %}
+                <li><a href="{{ url_for('admin_users') }}">Användare</a></li>
+                {% endif %}
+                {% if session.is_admin or session.is_superadmin or session.role_07 %}
+                <li><a href="{{ url_for('admin_alarms') }}">Alarm/History</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('auth_logout') }}">Logga ut</a></li>
+                {% if session.is_superadmin %}
+                <li><span class="badge">Superadmin</span></li>
+                {% elif session.is_admin %}
+                <li><span class="badge">Admin</span></li>
+                {% elif session.role_07 %}
+                <li><span class="badge">Roll 07</span></li>
+                {% endif %}
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+        {% endblock %}
+        {% endif %}
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer style="text-align: center; padding: 20px; border-top: 1px solid #333; color: #666; margin-top: auto;">
+        <p>
+            Open Source Attendance Reporting System | Configure for your organization
+        </p>
+    </footer>
+    
+    <script src="{{ url_for('static', filename='app.js') }}?v={{ range(1000, 9999) | random }}"></script>
+</body>
+</html>

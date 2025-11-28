@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}NFC Närvaro - Närvarorapportering{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='nfc_login.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="nfc-container">
+    <h1>NFC Närvaro</h1>
+    <h3>Skanna din NFC-tagg</h3>
+    <div class="nfc-input-section">
+        <input type="text" 
+               id="nfcInput" 
+               class="nfc-input" 
+               placeholder="Håll taggen nära läsaren..."
+               autocomplete="off">
+    </div>
+
+    <div id="statusMessage" class="status-message" style="display: none;"></div>
+    
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Bearbetar...</p>
+    </div>
+
+    <div style="margin-top: 2rem;">
+        <a href="/" class="secondary">Tillbaka till inloggning</a>
+    </div>
+</div>
+
+<script>
+let isProcessing = false;
+
+// Focus the NFC input when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const nfcInput = document.getElementById('nfcInput');
+    nfcInput.focus();
+    
+    // Listen for NFC input - use the same logic as manual input
+    nfcInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            processNFCInput();
+        }
+    });
+    
+    // Also listen for input changes to show visual feedback
+    let inputTimeout;
+    nfcInput.addEventListener('input', function(e) {
+        const input = e.target.value.trim().toUpperCase();
+        
+        // Clear previous timeout
+        if (inputTimeout) {
+            clearTimeout(inputTimeout);
+        }
+        
+        if (input.length >= 4) { // Minimum length for NFC tag
+            // Longer delay to ensure all input is captured
+            inputTimeout = setTimeout(() => {
+                processNFCInput();
+            }, 500);
+        }
+    });
+});
+
+function processNFCInput() {
+    const nfcInput = document.getElementById('nfcInput');
+    const tagId = nfcInput.value.trim().toUpperCase();
+    
+    if (!tagId) {
+        showStatus('Ange en NFC-kod', 'error');
+        return;
+    }
+    
+    processTag(tagId);
+}
+
+function processTag(tagId) {
+    if (isProcessing) {
+        return;
+    }
+    
+    isProcessing = true;
+    showLoading(true);
+    hideStatus();
+    
+    // Send NFC tag to server
+    fetch('/auth/nfc-login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tag_uid: tagId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.action === 'attended_alarm') {
+                showStatus(`Du är nu markerad som "på plats" för larm: ${data.alarm_description}`, 'success');
+            } else if (data.action === 'no_alarm') {
+                showStatus(`${data.message} (${data.department})`, 'info');
+            }
+        } else {
+            showStatus(data.error || 'Ett fel uppstod', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showStatus('Ett fel uppstod vid kommunikation med servern', 'error');
+    })
+    .finally(() => {
+        isProcessing = false;
+        showLoading(false);
+        // Clear input and refocus
+        document.getElementById('nfcInput').value = '';
+        document.getElementById('nfcInput').focus();
+    });
+}
+
+function showStatus(message, type) {
+    const statusDiv = document.getElementById('statusMessage');
+    statusDiv.textContent = message;
+    statusDiv.className = `status-message status-${type}`;
+    statusDiv.style.display = 'block';
+}
+
+function hideStatus() {
+    const statusDiv = document.getElementById('statusMessage');
+    statusDiv.style.display = 'none';
+}
+
+function showLoading(show) {
+    const loadingDiv = document.getElementById('loading');
+    loadingDiv.style.display = show ? 'block' : 'none';
+}
+
+</script>
+{% endblock %}

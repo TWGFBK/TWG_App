@@ -1,0 +1,402 @@
+/* Search section styling */
+.search-section h3 {
+    color: white !important;
+}
+
+.search-section label {
+    color: white !important;
+}
+
+/* Member list section */
+.member-list-section h2 {
+    color: white !important;
+}
+
+.search-members label {
+    color: white !important;
+}
+
+/* Excel-like table container */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin: 20px 0;
+}
+
+/* Excel-like table styling */
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.users-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f2f2f2;
+}
+
+.users-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #000;
+    border: 1px solid #d0d0d0;
+    background-color: #f2f2f2;
+    white-space: nowrap;
+}
+
+.users-table td {
+    padding: 10px 12px;
+    border: 1px solid #d0d0d0;
+    color: white;
+    vertical-align: middle;
+}
+
+.users-table tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.users-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* User ID column */
+.user-id {
+    font-weight: 600;
+    font-family: monospace;
+    text-align: center;
+    min-width: 80px;
+}
+
+/* Numbers cell */
+.numbers-cell {
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+/* Roles cell */
+.roles-cell {
+    white-space: nowrap;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    margin: 0.125rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.role-badge.rd {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.role-badge.chafoer {
+    background-color: #fff3e0;
+    color: #e65100;
+}
+
+.role-badge.role07 {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.role-badge.admin {
+    background-color: #fff3e0;
+    color: #f57c00;
+}
+
+.role-badge.md {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+}
+
+/* Action cell */
+.action-cell {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.action-cell .btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+/* Button styles */
+.btn {
+    text-align: center;
+    padding: 8px 12px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+    display: inline-block;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    opacity: 1;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+    opacity: 1;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #212529;
+    border: none;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    /* Make page header stack vertically on mobile */
+    .page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+    
+    .page-header > div {
+        flex-direction: column !important;
+        width: 100%;
+        gap: 0.5rem !important;
+    }
+    
+    .page-header a {
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .users-table {
+        font-size: 0.9rem;
+    }
+    
+    .users-table th,
+    .users-table td {
+        padding: 10px 8px;
+    }
+    
+    /* Hide columns on mobile - only show First Name, Last Name, and Action */
+    .users-table th.col-id,
+    .users-table td.col-id,
+    .users-table th.col-phone,
+    .users-table td.col-phone,
+    .users-table th.col-departments,
+    .users-table td.col-departments,
+    .users-table th.col-numbers,
+    .users-table td.col-numbers,
+    .users-table th.col-roles,
+    .users-table td.col-roles {
+        display: none;
+    }
+    
+    /* Make remaining columns wider on mobile */
+    .users-table th.col-first-name,
+    .users-table td.col-first-name,
+    .users-table th.col-last-name,
+    .users-table td.col-last-name {
+        width: auto;
+        min-width: 100px;
+    }
+    
+    .action-cell .btn {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+}
+
+/* Pagination info */
+.pagination-info {
+    margin: 20px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    text-align: center;
+    color: #666;
+}
+
+.sort-controls {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.sort-controls label {
+    font-weight: bold;
+    margin-right: 10px;
+    color: #333 !important;
+}
+
+.sort-controls select {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: #333 !important;
+    background: white;
+}
+
+/* Modal styles */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+/* Edit modal should have higher z-index than search modal */
+#editModal {
+    z-index: 1001;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 0;
+    border: 1px solid #888;
+    border-radius: 0.375rem;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #000 !important;
+}
+
+.close {
+    color: #000 !important;
+    font-size: 28px;
+    font-weight: bold;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+}
+
+.modal form {
+    padding: 1rem;
+}
+
+/* Modal text styling - make grey text black for better readability */
+.modal label {
+    color: #000 !important;
+}
+
+.modal legend {
+    color: #000 !important;
+}
+
+.modal-footer {
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Make all grey text in modals and search results black */
+.member-card h3,
+.member-card .member-id,
+.member-card .detail-row .label,
+.member-card .detail-row .value,
+.member-title h3,
+.member-id {
+    color: #000 !important;
+}
+
+.detail-row .label,
+.detail-row .value {
+    color: #000 !important;
+}
+
+/* Override Pico CSS muted colors in modals - make all grey text black */
+.modal-content p,
+.modal-content span:not(.role-badge),
+.modal-content h1,
+.modal-content h2,
+.modal-content h3,
+.modal-content h4,
+.modal-content h5,
+.modal-content h6 {
+    color: #000 !important;
+}
+
+/* Ensure buttons keep their intended colors */
+.modal-content .btn-primary {
+    color: white !important;
+}
+
+.modal-content .btn-secondary {
+    color: white !important;
+}
+
+/* Specifically target search results */
+#search-results p,
+#search-results span:not(.role-badge),
+#search-results h1,
+#search-results h2,
+#search-results h3,
+#search-results h4,
+#search-results h5,
+#search-results h6 {
+    color: #000 !important;
+}
+
+/* Ensure buttons in search results keep their intended colors */
+#search-results .btn-primary {
+    color: white !important;
+}
+
+#search-results .btn-secondary {
+    color: white !important;
+}

@@ -1,0 +1,523 @@
+{% extends "base.html" %}
+
+{% block title %}Alarm Display{% endblock %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='alarm_display.css') }}">
+<div class="container">
+    <div class="alarm-header">
+        
+        {% if alarm[2] %}
+        <div class="alarm-details">
+            <div class="detail-item">
+                {{ alarm[2] }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if has_role_07 and other_departments %}
+    <div class="other-departments-counters-compact-fullwidth">
+        {% for dept in other_departments %}
+        <div class="other-dept-counter-compact" id="other-dept-counter-{{ dept[0] }}">
+            <span class="other-dept-code-compact">{{ dept[1] }}</span>
+            <span class="other-dept-count-compact">| <span class="on-site-count">0</span> på plats<span class="rd-section"> | varav <span class="rd-count">0</span> RD</span> | <span class="incoming-count">0</span> inkommande |</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="departments-grid">
+        {% for department in departments %}
+        <div class="department-section">
+            <h2>{{ department[2] }}</h2>
+            
+            <div class="attendance-section">
+                <h3>Kommer<span id="role-counters-{{ department[0] }}" class="role-counters"></span></h3>
+                <div id="attendance-{{ department[0] }}" class="attendance-list">
+                    <p class="loading">Ingen anmäld...</p>
+                </div>
+            </div>
+            
+            <div class="comments-section">
+                <h3>Kommentarer</h3>
+                <div id="comments-{{ department[0] }}" class="comments-list">
+                    <p class="loading">Inga kommentarer...</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Edit Comment Modal -->
+<div id="editCommentModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Redigera kommentar</h3>
+        <textarea id="editCommentText" placeholder="Skriv din kommentar..."></textarea>
+        <div class="modal-actions">
+            <button id="saveEditComment" class="btn btn-primary">Spara</button>
+            <button id="cancelEditComment" class="btn btn-secondary">Avbryt</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Get current user ID from server
+const currentUserId = '{{ session.user_id }}';
+
+// Helper function to format name with RD and C badges
+function formatNameWithRD(displayName) {
+    // Remove user ID prefix (4 digits)
+    let name = displayName.replace(/^\d{4}\s+/, '');
+    
+    // Check if name contains RD
+    if (name.includes(' RD')) {
+        name = name.replace(' RD', ' <span class="rd-badge">RD</span>');
+    }
+    
+    // Check if name contains C
+    if (name.includes(' C')) {
+        name = name.replace(' C', ' <span class="chafoer-badge">C</span>');
+    }
+    
+    return name;
+}
+
+function loadAttendanceData() {
+    const alarmId = '{{ alarm[0] }}';
+    
+    // Load attendance data
+    fetch(`/api/attendance/${alarmId}`)
+    .then(response => response.json())
+    .then(data => {
+        console.log('Attendance data:', data);
+        // Handle new response format with attendees and other_dept_counts
+        const attendees = data.attendees || data; // Support both old and new format
+        const otherDeptCounts = data.other_dept_counts || {};
+        updateAttendanceSections(attendees);
+        updateOtherDeptCounters(otherDeptCounts);
+        // Update countdowns after new data is loaded
+        updateCountdowns();
+    })
+    .catch(error => {
+        console.error('Error loading attendance:', error);
+    });
+    
+    // Load comments data SEPARATELY
+    loadCommentsData(alarmId);
+}
+
+function updateOtherDeptCounters(otherDeptCounts) {
+    // Update counters for other departments (role_07 only)
+    Object.keys(otherDeptCounts).forEach(deptId => {
+        const counterElement = document.getElementById(`other-dept-counter-${deptId}`);
+        if (counterElement) {
+            const deptInfo = otherDeptCounts[deptId];
+            const onSiteSpan = counterElement.querySelector('.on-site-count');
+            const rdSpan = counterElement.querySelector('.rd-count');
+            const incomingSpan = counterElement.querySelector('.incoming-count');
+            const rdSection = counterElement.querySelector('.rd-section');
+            
+            if (onSiteSpan) onSiteSpan.textContent = deptInfo.on_site || 0;
+            if (rdSpan) rdSpan.textContent = deptInfo.rd_count || 0;
+            if (incomingSpan) incomingSpan.textContent = deptInfo.incoming || 0;
+            
+            // Show/hide RD section based on count
+            if (rdSection) {
+                rdSection.style.display = (deptInfo.rd_count > 0) ? 'inline' : 'none';
+            }
+        }
+    });
+}
+
+function loadCommentsData(alarmId) {
+    fetch(`/api/responses/${alarmId}`)
+    .then(response => response.json())
+    .then(data => {
+        console.log('Comments data:', data);
+        updateCommentsSections(data);
+        // Update countdowns after new data is loaded
+        updateCountdowns();
+    })
+    .catch(error => {
+        console.error('Error loading comments:', error);
+    });
+}
+
+function updateAttendanceSections(attendanceData) {
+    // Group by department
+    const attendanceByDept = {};
+    attendanceData.forEach(item => {
+        if (!attendanceByDept[item.department_id]) {
+            attendanceByDept[item.department_id] = [];
+        }
+        attendanceByDept[item.department_id].push(item);
+    });
+    
+    // Update each department
+    Object.keys(attendanceByDept).forEach(deptId => {
+        const container = document.getElementById(`attendance-${deptId}`);
+        const roleCountersContainer = document.getElementById(`role-counters-${deptId}`);
+        
+        if (container) {
+            const items = attendanceByDept[deptId];
+            
+            // Calculate role counts
+            if (roleCountersContainer) {
+                const rdCount = items.filter(item => item.is_rd).length;
+                const chafoerCount = items.filter(item => item.is_chafoer).length;
+                
+                if (rdCount > 0 || chafoerCount > 0) {
+                    roleCountersContainer.innerHTML = `
+                        <span class="role-counter-item">
+                            <span class="role-counter-label">RD</span>
+                            <span class="role-counter-value">${rdCount}</span>
+                        </span>
+                        <span class="role-counter-item">
+                            <span class="role-counter-label">C</span>
+                            <span class="role-counter-value">${chafoerCount}</span>
+                        </span>
+                    `;
+                } else {
+                    roleCountersContainer.innerHTML = '';
+                }
+            }
+            if (items.length === 0) {
+                container.innerHTML = '<p class="no-attendance">Ingen närvaro registrerad</p>';
+            } else {
+                // Sort items: "På plats" first, then by shortest time remaining
+                const now = new Date();
+                items.sort((a, b) => {
+                    // Determine arrival time - prioritize ETA if it exists, otherwise use attended_at
+                    let aEta = null;
+                    let aIsOnSite = false;
+                    if (a.eta) {
+                        aEta = new Date(a.eta);
+                        aIsOnSite = aEta <= now;
+                    } else if (a.attended_at) {
+                        aEta = new Date(a.attended_at);
+                        aIsOnSite = true; // If they have attended_at, they're on site
+                    }
+                    
+                    let bEta = null;
+                    let bIsOnSite = false;
+                    if (b.eta) {
+                        bEta = new Date(b.eta);
+                        bIsOnSite = bEta <= now;
+                    } else if (b.attended_at) {
+                        bEta = new Date(b.attended_at);
+                        bIsOnSite = true; // If they have attended_at, they're on site
+                    }
+                    
+                    // "På plats" entries always go first
+                    if (aIsOnSite && !bIsOnSite) return -1;
+                    if (!aIsOnSite && bIsOnSite) return 1;
+                    
+                    // If both are "på plats" or both are not, sort by time
+                    if (aEta && bEta) {
+                        if (aIsOnSite && bIsOnSite) {
+                            // Both on site - most recent first
+                            return bEta - aEta;
+                        } else {
+                            // Both coming - shortest time remaining first
+                            const diffA = aEta - now;
+                            const diffB = bEta - now;
+                            if (diffA > 0 && diffB > 0) {
+                                return diffA - diffB;
+                            }
+                        }
+                    }
+                    
+                    return 0;
+                });
+                
+                container.innerHTML = items.map((item, index) => {
+                    const now = new Date();
+                    let isArrived = false;
+                    let arrivalTime = null;
+                    let statusText = 'Kommer';
+                    
+                    // Check ETA first - if someone has set a future ETA, they're not arrived yet
+                    if (item.eta) {
+                        const eta = new Date(item.eta);
+                        arrivalTime = eta;
+                        if (eta <= now) {
+                            // ETA has passed, they're on site
+                            isArrived = true;
+                            statusText = 'På plats';
+                        } else {
+                            // Future ETA, they're still coming
+                            isArrived = false;
+                            statusText = 'Kommer';
+                        }
+                    } else if (item.attended_at) {
+                        // No ETA but has attended_at, they're on site
+                        arrivalTime = new Date(item.attended_at);
+                        isArrived = true;
+                        statusText = 'På plats';
+                    }
+                    
+                    const alternateClass = index % 2 === 1 ? 'alternate-row' : '';
+                    const onSiteClass = isArrived ? 'on-site' : '';
+                    
+                    return `
+                        <div class="attendance-item ${isArrived ? 'arrived on-site-bg' : 'arriving'} ${alternateClass}">
+                            <div class="user-info">
+                                <div class="user-name">${item.department_number ? `(${item.department_number}) ` : ''}${formatNameWithRD(item.display_name)}</div>
+                            </div>
+                            <div class="user-phone-section">
+                                ${item.phone ? `<div class="user-phone">${item.phone}</div>` : ''}
+                            </div>
+                            <div class="arrival-info">
+                                <div class="arrival-countdown ${onSiteClass}" ${arrivalTime ? `data-arrival-time="${arrivalTime.toISOString()}"` : ''}>
+                                    ${isArrived ? 'På plats' : (arrivalTime ? arrivalTime.toLocaleTimeString('sv-SE', {hour: '2-digit', minute: '2-digit'}) : '')}
+                                </div>
+                                <div class="arrival-time">${arrivalTime ? `ETA ${arrivalTime.toLocaleTimeString('sv-SE', {hour: '2-digit', minute: '2-digit'})}` : ''}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Sort the DOM elements after rendering
+                sortAttendanceList(container);
+            }
+        }
+    });
+}
+
+function updateCommentsSections(commentsData) {
+    console.log('Updating comments sections with:', commentsData);
+    
+    // Group by department
+    const commentsByDept = {};
+    commentsData.forEach(item => {
+        if (!commentsByDept[item.department_id]) {
+            commentsByDept[item.department_id] = [];
+        }
+        commentsByDept[item.department_id].push(item);
+    });
+    
+    console.log('Comments grouped by dept:', commentsByDept);
+    
+    // Update each department
+    Object.keys(commentsByDept).forEach(deptId => {
+        const container = document.getElementById(`comments-${deptId}`);
+        console.log(`Looking for comments container: comments-${deptId}`, container);
+        
+        if (container) {
+            const comments = commentsByDept[deptId];
+            const validComments = comments.filter(item => item.comment && item.comment.trim() !== '');
+            
+            console.log(`Valid comments for dept ${deptId}:`, validComments);
+            
+            if (validComments.length === 0) {
+                container.innerHTML = '<p class="no-comments">Inga kommentarer</p>';
+            } else {
+                container.innerHTML = validComments.map((item, index) => {
+                    const respondedAt = new Date(item.responded_at);
+                    const commentClass = item.is_attending ? 'comment-item attending' : 'comment-item not-attending';
+                    const alternateClass = index % 2 === 1 ? 'alternate-row' : '';
+                    const isOwnComment = item.user_id === currentUserId;
+                    const editButton = isOwnComment ? `<button class="edit-comment-btn" onclick="editComment('${item.user_id}', '${item.comment}', ${item.department_id})">✏️</button>` : '';
+                    
+                    return `
+                        <div class="${commentClass} ${alternateClass}">
+                            <div class="user-info">
+                                <div class="user-name">${formatNameWithRD(item.display_name)}</div>
+                                <div class="comment-text">${item.comment}</div>
+                                ${item.phone ? `<div class="user-phone">${item.phone}</div>` : ''}
+                            </div>
+                            <div class="comment-actions">
+                                <div class="comment-time">
+                                    ${respondedAt.toLocaleTimeString('sv-SE', {hour: '2-digit', minute: '2-digit'})}
+                                </div>
+                                ${editButton}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        } else {
+            console.log(`Container comments-${deptId} not found!`);
+        }
+    });
+}
+
+// Edit comment functionality
+let currentEditUserId = null;
+let currentEditDepartmentId = null;
+
+function editComment(userId, currentComment, departmentId) {
+    currentEditUserId = userId;
+    currentEditDepartmentId = departmentId;
+    
+    document.getElementById('editCommentText').value = currentComment;
+    document.getElementById('editCommentModal').style.display = 'block';
+}
+
+function saveEditComment() {
+    const newComment = document.getElementById('editCommentText').value.trim();
+    
+    if (!newComment) {
+        alert('Kommentaren kan inte vara tom');
+        return;
+    }
+    
+    const alarmId = '{{ alarm[0] }}';
+    const formData = new FormData();
+    formData.append('comment', newComment);
+    
+    fetch(`/api/update-comment/${alarmId}/${currentEditDepartmentId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('editCommentModal').style.display = 'none';
+            // Reload comments
+            loadCommentsData(alarmId);
+        } else {
+            alert('Fel vid uppdatering av kommentar: ' + (data.error || 'Okänt fel'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Nätverksfel vid uppdatering av kommentar');
+    });
+}
+
+function cancelEditComment() {
+    document.getElementById('editCommentModal').style.display = 'none';
+    currentEditUserId = null;
+    currentEditDepartmentId = null;
+}
+
+// Event listeners
+document.getElementById('saveEditComment').addEventListener('click', saveEditComment);
+document.getElementById('cancelEditComment').addEventListener('click', cancelEditComment);
+
+// Sort attendance list: "På plats" first, then lowest countdown
+function sortAttendanceList(listElement) {
+    const items = Array.from(listElement.querySelectorAll('.attendance-item'));
+    
+    items.sort((a, b) => {
+        const countdownA = a.querySelector('.arrival-countdown');
+        const countdownB = b.querySelector('.arrival-countdown');
+        
+        // Check if items are "på plats"
+        const isOnSiteA = countdownA && (countdownA.classList.contains('on-site') || countdownA.textContent.trim() === 'På plats');
+        const isOnSiteB = countdownB && (countdownB.classList.contains('on-site') || countdownB.textContent.trim() === 'På plats');
+        
+        // "På plats" entries always go first
+        if (isOnSiteA && !isOnSiteB) return -1;
+        if (!isOnSiteA && isOnSiteB) return 1;
+        
+        // If both are "på plats" or both are not, maintain order
+        if (isOnSiteA && isOnSiteB) return 0;
+        
+        // Both have countdowns - sort by lowest countdown (shortest time remaining)
+        if (countdownA && countdownA.hasAttribute('data-arrival-time') && 
+            countdownB && countdownB.hasAttribute('data-arrival-time')) {
+            const timeA = new Date(countdownA.getAttribute('data-arrival-time'));
+            const timeB = new Date(countdownB.getAttribute('data-arrival-time'));
+            const now = new Date();
+            const diffA = timeA - now;
+            const diffB = timeB - now;
+            
+            // Both are future - sort by shortest time remaining
+            if (diffA > 0 && diffB > 0) {
+                return diffA - diffB; // Lower countdown first
+            }
+        }
+        
+        return 0; // Maintain current order
+    });
+    
+    // Re-append items in sorted order and reapply alternate-row classes
+    items.forEach((item, index) => {
+        // Remove alternate-row class
+        item.classList.remove('alternate-row');
+        // Add alternate-row to every other item (odd indices)
+        if (index % 2 === 1) {
+            item.classList.add('alternate-row');
+        }
+        listElement.appendChild(item);
+    });
+}
+
+// Update countdowns every second
+function updateCountdowns() {
+    document.querySelectorAll('.arrival-countdown[data-arrival-time]').forEach(element => {
+        const arrivalTime = new Date(element.getAttribute('data-arrival-time'));
+        const now = new Date();
+        const diff = arrivalTime - now;
+        
+        // Get the parent attendance item
+        const attendanceItem = element.closest('.attendance-item');
+        
+        let newText = '';
+        let wasOnSite = element.classList.contains('on-site') || element.textContent.trim() === 'På plats';
+        
+        if (diff > 0) {
+            // Still coming - show countdown in minutes:seconds format
+            const totalSeconds = Math.ceil(diff / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            newText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            element.classList.remove('on-site');
+            if (attendanceItem) {
+                attendanceItem.classList.remove('on-site-bg');
+                attendanceItem.classList.add('arriving');
+                attendanceItem.classList.remove('arrived');
+            }
+        } else {
+            // Arrived
+            newText = 'På plats';
+            element.classList.add('on-site');
+            if (attendanceItem) {
+                attendanceItem.classList.add('on-site-bg');
+                attendanceItem.classList.add('arrived');
+                attendanceItem.classList.remove('arriving');
+            }
+        }
+        
+        // Only update if text has changed to prevent unnecessary DOM updates
+        if (element.textContent !== newText) {
+            element.textContent = newText;
+            
+            // If status changed to/from "på plats", re-sort the list
+            let isNowOnSite = element.classList.contains('on-site') || element.textContent.trim() === 'På plats';
+            if (wasOnSite !== isNowOnSite) {
+                const listElement = attendanceItem?.closest('.attendance-list');
+                if (listElement) {
+                    sortAttendanceList(listElement);
+                }
+            }
+        }
+    });
+    
+    // Re-sort all attendance lists to ensure proper order (på plats first, then lowest countdown)
+    document.querySelectorAll('.attendance-list').forEach(listElement => {
+        sortAttendanceList(listElement);
+    });
+}
+
+// Update countdowns every second
+setInterval(updateCountdowns, 1000);
+
+// Load data every 5 seconds for real-time updates
+setInterval(loadAttendanceData, 5000);
+
+// Load initial data
+loadAttendanceData();
+
+// Start countdown immediately
+updateCountdowns();
+</script>
+{% endblock %}

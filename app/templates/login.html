@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}TWG{% endblock %}
+
+{% block content %}
+<div class="grid">
+    <div>
+        <h1>Brandkårens Närvarorapportering</h1>
+        <p>Logga in med ditt ID och lösenord.</p>
+        
+        {% if error %}
+        <div class="alert alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('auth_login') }}">
+            <div class="grid">
+                <div>
+                    <label for="id">ID (4 siffror):</label>
+                    <input type="text" id="id" name="id" pattern="[0-9]{4}" maxlength="4" required>
+                </div>
+                <div>
+                    <label for="password">Lösenord (4 siffror):</label>
+                    <input type="password" id="password" name="password" pattern="[0-9]{4}" maxlength="4" required>
+                </div>
+            </div>
+            <button type="submit">Logga in</button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="{{ url_for('nfc_login') }}" class="secondary">
+                📱 NFC Inloggning
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle numeric keypad for ID input
+    const idInput = document.getElementById('id');
+    const passwordInput = document.getElementById('password');
+    const form = document.querySelector('form');
+    
+    // Check if there's an error message (indicating failed login)
+    const errorElement = document.querySelector('.alert-error');
+    
+    // Auto-focus password after 4 digits
+    idInput.addEventListener('input', function() {
+        if (this.value.length === 4) {
+            passwordInput.focus();
+        }
+    });
+    
+    // Auto-submit after password ONLY if there's no error message
+    passwordInput.addEventListener('input', function() {
+        if (this.value.length === 4 && !errorElement) {
+            form.submit();
+        }
+    });
+    
+    // If there's an error, disable auto-submit and clear password
+    if (errorElement) {
+        passwordInput.value = '';
+        passwordInput.placeholder = 'Ange lösenord manuellt (klicka Logga in)';
+        passwordInput.focus();
+    }
+});
+</script>
+{% endblock %}
