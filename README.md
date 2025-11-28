@@ -2,7 +2,7 @@
 
 A mobile-first attendance reporting system for emergency response organizations, fire departments, and similar organizations using Flask and PostgreSQL.
 
-![Alarm Documentation](Img/larmdocumentation1PC.png)
+![Fire Truck](Img/brandbil_trans.png)
 
 ## Features
 
