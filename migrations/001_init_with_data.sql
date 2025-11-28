@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS users (
   is_admin   BOOLEAN NOT NULL DEFAULT FALSE,
   is_superadmin BOOLEAN NOT NULL DEFAULT FALSE,
   is_md      BOOLEAN NOT NULL DEFAULT FALSE,
-  first_name VARCHAR(50),
-  last_name  VARCHAR(50)
+  first_name VARCHAR(11),
+  last_name  VARCHAR(11)
 );
 
 CREATE TABLE IF NOT EXISTS roles (
@@ -279,8 +279,8 @@ ON CONFLICT (code) DO NOTHING;
 
 -- Insert superadmin users
 INSERT INTO users (id, phone, password, is_rd, role_07, is_admin, is_superadmin, is_md, first_name, last_name) VALUES
-  ('0052', '+12345678901', 'y', FALSE, TRUE, TRUE, TRUE, TRUE, 'John', 'Smith'), -- Superadmin with MD role
-  ('0050', '+12345678902', 'y', FALSE, TRUE, TRUE, TRUE, TRUE, 'Jane', 'Doe') -- Superadmin with MD role
+  ('0010', '+12345678901', 'y', FALSE, TRUE, TRUE, TRUE, TRUE, 'John', 'Smith'), -- Superadmin with MD role
+  ('0011', '+12345678902', 'y', FALSE, TRUE, TRUE, TRUE, TRUE, 'Jane', 'Doe') -- Superadmin with MD role
 ON CONFLICT (id) DO NOTHING;
 
 -- Insert roles
@@ -294,22 +294,22 @@ ON CONFLICT (code) DO NOTHING;
 
 -- Assign superadmin users to all departments with department numbers
 INSERT INTO user_departments (user_id, department_id, number) VALUES
-  ('0052', (SELECT id FROM departments WHERE code = 'DEPT01'), 52),
-  ('0052', (SELECT id FROM departments WHERE code = 'DEPT02'), 52),
-  ('0052', (SELECT id FROM departments WHERE code = 'DEPT03'), 52),
-  ('0052', (SELECT id FROM departments WHERE code = 'DEPT04'), 52),
-  ('0052', (SELECT id FROM departments WHERE code = 'DEPT05'), 52),
-  ('0050', (SELECT id FROM departments WHERE code = 'DEPT01'), 50),
-  ('0050', (SELECT id FROM departments WHERE code = 'DEPT02'), 50),
-  ('0050', (SELECT id FROM departments WHERE code = 'DEPT03'), 50),
-  ('0050', (SELECT id FROM departments WHERE code = 'DEPT04'), 50),
-  ('0050', (SELECT id FROM departments WHERE code = 'DEPT05'), 50)
+  ('0010', (SELECT id FROM departments WHERE code = 'DEPT01'), 10),
+  ('0010', (SELECT id FROM departments WHERE code = 'DEPT02'), 10),
+  ('0010', (SELECT id FROM departments WHERE code = 'DEPT03'), 10),
+  ('0010', (SELECT id FROM departments WHERE code = 'DEPT04'), 10),
+  ('0010', (SELECT id FROM departments WHERE code = 'DEPT05'), 10),
+  ('0011', (SELECT id FROM departments WHERE code = 'DEPT01'), 11),
+  ('0011', (SELECT id FROM departments WHERE code = 'DEPT02'), 11),
+  ('0011', (SELECT id FROM departments WHERE code = 'DEPT03'), 11),
+  ('0011', (SELECT id FROM departments WHERE code = 'DEPT04'), 11),
+  ('0011', (SELECT id FROM departments WHERE code = 'DEPT05'), 11)
 ON CONFLICT (user_id, department_id) DO NOTHING;
 
--- Insert default NFC tags for user 0052
+-- Insert default NFC tags for user 0010
 INSERT INTO nfc_tags (user_id, department_id, tag_uid, label) VALUES
-  ('0052', (SELECT id FROM departments WHERE code = 'DEPT01'), '33253E35', 'Station A'),
-  ('0052', (SELECT id FROM departments WHERE code = 'DEPT02'), '482974', 'Station B')
+  ('0010', (SELECT id FROM departments WHERE code = 'DEPT01'), '33253E35', 'Station A'),
+  ('0010', (SELECT id FROM departments WHERE code = 'DEPT02'), '482974', 'Station B')
 ON CONFLICT (tag_uid) DO NOTHING;
 
 -- Insert initial car data for each department
