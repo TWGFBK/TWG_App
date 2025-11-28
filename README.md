@@ -81,7 +81,7 @@ The seed data includes these test users:
 - **Station C**: ID `0004`, Password `d` (Station C) - Alice Williams
 - **Station D**: ID `0005`, Password `e` (Station D) - Charlie Brown
 - **Multi-Station**: ID `0006`, Password `f` (Station A + Station B) - David Wilson
-- **Superadmin**: ID `0052`, Password `y` (all stations) - Admin User
+- **Superadmin**: ID `0010`, Password `y` (all stations) - Admin User
 
 ## Usage
 
