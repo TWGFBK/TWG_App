@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../../static/add_user.css">
 <div class="grid">
     <div>
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div class="page-header">
             <h1>Lägg till användare</h1>
             <a href="/admin/users" class="secondary">← Tillbaka till användare</a>
         </div>
@@ -76,20 +76,20 @@
                             <input type="checkbox" name="departments" value="{{ dept[0] }}" onchange="toggleNfcField(this)">
                             {{ dept[2] }} ({{ dept[1] }})
                         </label>
-                        <div class="nfc-field" style="display: none;">
+                        <div class="nfc-field">
                             <input type="text" name="nfc_tags_{{ dept[0] }}" placeholder="NFC-tagg för {{ dept[2] }}" pattern="[0-9A-Fa-f]+" title="Ange en giltig NFC-kod (hex)">
                         </div>
-                        <div class="number-field" style="display: none;">
+                        <div class="number-field">
                             <input type="number" name="numbers_{{ dept[0] }}" placeholder="Nummer för {{ dept[2] }}" min="0" max="999" title="Ange ett nummer mellan 0-999">
                         </div>
                     </div>
                     {% endfor %}
                 {% else %}
-                    <p style="color: #b1080b;">Inga avdelningar tillgängliga. Kontrollera att du är inloggad som admin.</p>
+                    <p class="error-text">Inga avdelningar tillgängliga. Kontrollera att du är inloggad som admin.</p>
                 {% endif %}
             </fieldset>
             
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <div class="form-actions-flex">
                 <a href="/admin/users" class="secondary">Avbryt</a>
                 <button type="submit" class="primary">Skapa användare</button>
             </div>
@@ -97,33 +97,6 @@
     </div>
 </div>
 
-<style>
-.department-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-    padding: 0.5rem;
-    border: 1px solid #525252;
-    border-radius: 0.375rem;
-}
-
-.department-checkbox {
-    flex: 1;
-    margin: 0;
-}
-
-.nfc-field, .number-field {
-    flex: 1;
-    min-width: 200px;
-}
-
-.nfc-field input, .number-field input {
-    width: 100%;
-    font-family: monospace;
-    font-size: 0.9rem;
-}
-</style>
 
 <script>
 function toggleNfcField(checkbox) {
@@ -132,11 +105,11 @@ function toggleNfcField(checkbox) {
     const numberField = departmentRow.querySelector('.number-field');
     
     if (checkbox.checked) {
-        nfcField.style.display = 'block';
-        numberField.style.display = 'block';
+        nfcField.classList.add('show');
+        numberField.classList.add('show');
     } else {
-        nfcField.style.display = 'none';
-        numberField.style.display = 'none';
+        nfcField.classList.remove('show');
+        numberField.classList.remove('show');
         // Clear the fields when department is unchecked
         const nfcInput = nfcField.querySelector('input');
         const numberInput = numberField.querySelector('input');

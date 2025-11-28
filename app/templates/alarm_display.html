@@ -55,7 +55,7 @@
 </div>
 
 <!-- Edit Comment Modal -->
-<div id="editCommentModal" class="modal" style="display: none;">
+<div id="editCommentModal" class="modal">
     <div class="modal-content">
         <h3>Redigera kommentar</h3>
         <textarea id="editCommentText" placeholder="Skriv din kommentar..."></textarea>
@@ -357,7 +357,7 @@ function editComment(userId, currentComment, departmentId) {
     currentEditDepartmentId = departmentId;
     
     document.getElementById('editCommentText').value = currentComment;
-    document.getElementById('editCommentModal').style.display = 'block';
+    document.getElementById('editCommentModal').classList.add('show');
 }
 
 function saveEditComment() {
@@ -379,7 +379,7 @@ function saveEditComment() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.getElementById('editCommentModal').style.display = 'none';
+            document.getElementById('editCommentModal').classList.remove('show');
             // Reload comments
             loadCommentsData(alarmId);
         } else {
@@ -393,7 +393,7 @@ function saveEditComment() {
 }
 
 function cancelEditComment() {
-    document.getElementById('editCommentModal').style.display = 'none';
+    document.getElementById('editCommentModal').classList.remove('show');
     currentEditUserId = null;
     currentEditDepartmentId = null;
 }

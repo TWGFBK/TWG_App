@@ -17,8 +17,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
 
 </head>
-<body style="display: flex; flex-direction: column; min-height: 100vh;">
-    <main class="container" style="flex: 1;">
+<body>
+    <main class="container">
         {% if session.user_id %}
         {% block nav %}
         <nav>
@@ -63,7 +63,7 @@
         {% block content %}{% endblock %}
     </main>
     
-    <footer style="text-align: center; padding: 20px; border-top: 1px solid #333; color: #666; margin-top: auto;">
+    <footer>
         <p>
             Open Source Attendance Reporting System | Configure for your organization
         </p>

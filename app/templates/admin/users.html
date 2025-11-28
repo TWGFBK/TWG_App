@@ -11,9 +11,9 @@
 <link rel="stylesheet" href="../../static/users.css">
 <div class="grid">
     <div>
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div class="page-header">
             <h1>Användare</h1>
-            <div style="display: flex; gap: 1rem; align-items: center;">
+            <div class="page-header-actions">
                 <a href="/admin/users/export" class="secondary">Exportera medlemslista</a>
                 <a id="addExistingUserBtn" class="primary" href="#">+ Lägg till existerande användare</a>
                 <a href="/admin/users/add" class="primary">+ Lägg till användare</a>
@@ -34,7 +34,7 @@
             <h2>Medlemmar i dina avdelningar ({{ users|length }})</h2>
             
             <!-- Search members -->
-            <div class="search-members" style="margin-bottom: 1rem;">
+            <div class="search-members">
                 <div class="grid">
                     <div>
                         <label for="searchMembers">Sök medlemmar:</label>
@@ -115,7 +115,7 @@
 </div>
 
 <!-- Edit User Modal -->
-<div id="editModal" class="modal" style="display: none;">
+<div id="editModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
             <h2>Redigera användare</h2>
@@ -201,7 +201,7 @@
 </div>
 
 <!-- Search Existing User Modal -->
-<div id="searchModal" class="modal" style="display: none;">
+<div id="searchModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
             <h2>Lägg till existerande användare</h2>
@@ -215,162 +215,11 @@
                     <button onclick="searchUser()" class="secondary">Sök</button>
                 </div>
             </div>
-            <div id="search-results" style="margin-top: 1rem;"></div>
+            <div id="search-results" class="search-results-margin"></div>
         </div>
     </div>
 </div>
 
-<style>
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--pico-muted-border-color);
-}
-
-.modal-header h2 {
-    margin: 0;
-}
-
-.close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: var(--pico-muted-color);
-    padding: 0;
-    width: 2rem;
-    height: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.close:hover {
-    color: var(--pico-color);
-}
-
-.edit-department-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-    padding: 0.5rem;
-    border: 1px solid var(--pico-muted-border-color);
-    border-radius: var(--pico-border-radius);
-}
-
-.edit-department-checkbox {
-    flex: 1;
-    margin: 0;
-}
-
-.edit-nfc-field {
-    flex: 1;
-    min-width: 200px;
-}
-
-.edit-nfc-field input {
-    width: 100%;
-    font-family: monospace;
-    font-size: 0.9rem;
-}
-
-.edit-number-field {
-    flex: 1;
-    min-width: 150px;
-}
-
-.edit-number-field input {
-    width: 100%;
-    font-family: monospace;
-    font-size: 0.9rem;
-}
-
-/* Mobile responsive styles for edit department section */
-@media (max-width: 768px) {
-    .edit-department-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.75rem;
-    }
-    
-    .edit-department-checkbox {
-        width: 100%;
-    }
-    
-    .edit-nfc-field {
-        min-width: 0;
-        width: 100%;
-    }
-    
-    .edit-number-field {
-        min-width: 0;
-        width: 100%;
-    }
-}
-
-/* Fix input field alignment in modal */
-.modal .grid > div {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-}
-
-.modal .grid label {
-    margin-bottom: 0.5rem;
-}
-
-.modal .grid input {
-    height: 2.5rem;
-}
-
-/* Mobile-first: Default styles for mobile */
-.modal {
-    padding: 1rem;
-}
-
-.modal-content {
-    max-width: 100%;
-    width: 100%;
-    margin: 1rem auto;
-}
-
-.search-form {
-    padding: 0 1rem;
-}
-
-/* Make Redigera buttons larger on desktop screens */
-@media (min-width: 768px) {
-    .member-actions .edit-user-btn {
-        padding: 0.75rem 1.5rem !important;
-        font-size: 1rem !important;
-        min-width: 120px !important;
-        height: auto !important;
-    }
-    
-    .member-actions {
-        margin-top: 0.75rem;
-    }
-    
-    /* Make modal window larger on desktop */
-    .modal {
-        padding: 2rem !important;
-    }
-    
-    .modal-content {
-        max-width: 800px !important;
-        width: 90% !important;
-        margin: 2rem auto !important;
-    }
-    
-    .search-form {
-        padding: 0 2rem;
-    }
-}
-</style>
 
 <script>
 
@@ -452,7 +301,7 @@
         // Show modal
         const modal = document.getElementById('editModal');
         if (modal) {
-            modal.style.display = 'block';
+            modal.classList.add('show');
         }
     } catch (error) {
         console.error('Error in editUser function:', error);
@@ -560,13 +409,13 @@ function searchUser() {
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                resultsDiv.innerHTML = `<p style="color: #dc3545;">${data.error}</p>`;
+                resultsDiv.innerHTML = `<p class="error-message">${data.error}</p>`;
             } else {
                 displaySearchResult(data);
             }
         })
         .catch(error => {
-            resultsDiv.innerHTML = '<p style="color: #dc3545;">Ett fel uppstod vid sökning</p>';
+            resultsDiv.innerHTML = '<p class="error-message">Ett fel uppstod vid sökning</p>';
             console.error('Search error:', error);
         });
 }
@@ -579,7 +428,7 @@ function displaySearchResult(user) {
     if (isInMyDepartments) {
         // User is already in your departments - show edit button
         resultsDiv.innerHTML = `
-            <div class="member-card" style="margin: 1rem 0;">
+            <div class="member-card member-card-margin">
                 <div class="member-header">
                     <div class="member-title">
                         <h3>${user.first_name || 'Namn'} ${user.last_name || 'Saknas'}</h3>
@@ -630,7 +479,7 @@ function displaySearchResult(user) {
     } else {
         // User is not in your departments - show department selection
         resultsDiv.innerHTML = `
-            <div class="member-card" style="margin: 1rem 0;">
+            <div class="member-card member-card-margin">
                 <div class="member-header">
                     <div class="member-title">
                         <h3>${user.first_name || 'Namn'} ${user.last_name || 'Saknas'}</h3>
@@ -660,9 +509,9 @@ function displaySearchResult(user) {
                     </div>
                 </div>
                 
-                <div style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 0.375rem;">
+                <div class="dept-selection-container">
                     <p><strong>Välj avdelningar att lägga till användaren i:</strong></p>
-                    <div id="department-selection-${user.id}" style="margin: 0.5rem 0;">
+                    <div id="department-selection-${user.id}" class="dept-selection-inner">
                         <!-- Department checkboxes will be populated by JavaScript -->
                     </div>
                 </div>
@@ -713,7 +562,7 @@ function populateDepartmentSelection(userId) {
     container.innerHTML = '';
     
     if (adminDepartments.length === 0) {
-        container.innerHTML = '<p style="color: red;">Inga avdelningar tillgängliga för val.</p>';
+        container.innerHTML = '<p class="error-message-red">Inga avdelningar tillgängliga för val.</p>';
         return;
     }
     
@@ -801,15 +650,15 @@ function closeSearchResults() {
 
 
 function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
+    document.getElementById('editModal').classList.remove('show');
 }
 
 function openSearchModal() {
-    document.getElementById('searchModal').style.display = 'block';
+    document.getElementById('searchModal').classList.add('show');
 }
 
 function closeSearchModal() {
-    document.getElementById('searchModal').style.display = 'none';
+    document.getElementById('searchModal').classList.remove('show');
     // Clear search results and input
     document.getElementById('search-results').innerHTML = '';
     document.getElementById('search_user_id').value = '';

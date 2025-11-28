@@ -237,3 +237,39 @@ select {
         background: rgba(255, 255, 255, 0.1);
     }
 }
+
+/* Profile page styles */
+.profile-form-actions {
+    margin-top: 20px;
+}
+
+.profile-form-actions a {
+    margin-left: 10px;
+}
+
+/* Login page styles */
+.login-nfc-link {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+/* Body flex layout */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Main container flex */
+main.container {
+    flex: 1;
+}
+
+/* Footer styles */
+footer {
+    text-align: center;
+    padding: 20px;
+    border-top: 1px solid #333;
+    color: #666;
+    margin-top: auto;
+}

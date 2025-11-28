@@ -35,10 +35,10 @@
                         {% set location = alarm[8].split(';')[0].strip() %}
                     {% endif %}
                     {% if location %}
-                    <p style="margin-top: 10px;">
+                    <p class="location-margin">
                         <strong>Plats:</strong> {{ location }}
                     </p>
-                    <div class="time-buttons" style="margin-top: 10px;">
+                    <div class="time-buttons time-buttons-margin">
                         <a href="https://www.google.com/maps/dir/?api=1&destination={{ location|urlencode }}" 
                            target="_blank" 
                            class="maps-button" 
@@ -115,7 +115,7 @@
 </div>
 
 <!-- Response Modal -->
-<div id="responseModal" class="modal" style="display: none;">
+<div id="responseModal" class="modal">
     <div class="modal-content">
         <h3>Markera närvaro</h3>
         <p id="modalMessage"></p>
@@ -139,7 +139,7 @@
 </div>
 
 <!-- Custom Time Modal -->
-<div id="customTimeModal" class="modal" style="display: none;">
+<div id="customTimeModal" class="modal">
     <div class="modal-content">
         <h3>Egen tid</h3>
         <p>Ange antal minuter:</p>
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Clear and show modal
             document.getElementById('customMinutesInput').value = '';
-            document.getElementById('customTimeModal').style.display = 'flex';
+            document.getElementById('customTimeModal').classList.add('show');
         });
     });
     
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Close modal
-        modal.style.display = 'none';
+        modal.classList.remove('show');
         
         // Mark attendance with custom time
         const button = document.querySelector(`.custom-time-btn[data-alarm-id="${alarmId}"][data-department-id="${departmentId}"]`);
@@ -229,13 +229,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Handle custom time modal cancel
     document.getElementById('cancelCustomTime').addEventListener('click', function() {
-        document.getElementById('customTimeModal').style.display = 'none';
+        document.getElementById('customTimeModal').classList.remove('show');
     });
     
     // Close custom time modal when clicking outside
     document.getElementById('customTimeModal').addEventListener('click', function(e) {
         if (e.target === this) {
-            this.style.display = 'none';
+            this.classList.remove('show');
         }
     });
     
@@ -265,7 +265,7 @@ function showResponseModal(alarmId, departmentId, arrivalTime, button) {
     loadQuickComments();
     
     // Show modal
-    modal.style.display = 'flex';
+    modal.classList.add('show');
     isModalOpen = true;
     
     // Focus on comment select
@@ -325,7 +325,7 @@ function confirmResponse() {
         console.log('Response:', data);
         if (data.success) {
             // Close modal
-            document.getElementById('responseModal').style.display = 'none';
+            document.getElementById('responseModal').classList.remove('show');
             isModalOpen = false;
             // Refresh alarms list via AJAX instead of full reload
             refreshAlarmsList();
@@ -340,7 +340,7 @@ function confirmResponse() {
 }
 
 function cancelResponse() {
-    document.getElementById('responseModal').style.display = 'none';
+    document.getElementById('responseModal').classList.remove('show');
     isModalOpen = false;
     // Clear form
     document.getElementById('commentSelect').value = '';
@@ -590,8 +590,8 @@ function updateAlarmsList(data) {
         html += `<p><small>${formatDateTime(alarm.occurred_at)}</small></p>`;
         
         if (location) {
-            html += `<p style="margin-top: 10px;"><strong>Plats:</strong> ${location}</p>`;
-            html += '<div class="time-buttons" style="margin-top: 10px;">';
+            html += `<p class="location-margin"><strong>Plats:</strong> ${location}</p>`;
+            html += '<div class="time-buttons time-buttons-margin">';
             html += `<a href="https://www.google.com/maps/dir/?api=1&destination=${locationUrl}" target="_blank" class="maps-button" title="Visa vägbeskrivning i Google Maps">🗺️ Visa vägbeskrivning</a>`;
             html += '</div>';
         }
@@ -684,7 +684,7 @@ function attachEventListeners() {
             document.getElementById('customTimeModal').setAttribute('data-department-id', departmentId);
             
             document.getElementById('customMinutesInput').value = '';
-            document.getElementById('customTimeModal').style.display = 'flex';
+            document.getElementById('customTimeModal').classList.add('show');
         });
     });
 }

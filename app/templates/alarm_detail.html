@@ -49,7 +49,7 @@
         {% for dept in departments %}
         <article data-dept-id="{{ dept[0] }}" data-dept-code="{{ dept[1] }}">
             <h3>{{ dept[2] }} ({{ dept[1] }})</h3>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div class="dept-header-flex">
             {% if dept[3] %}
                 <p><strong>Status:</strong> Stängt - {{ dept[3]|format_local('%d/%m/%Y %H:%M') }} | <strong>Totalt:</strong> {{ attendance.get(dept[0], [])|length }} personer</p>
             {% else %}
@@ -81,43 +81,43 @@
                         data-user-name="{{ attendee[3] }} {{ attendee[4] }}"
                         data-user-number="{{ attendee[2] or '' }}"
                         data-department-id="{{ dept[0] }}"
-                        style="cursor: move; transition: background-color 0.2s;">
+                        class="draggable-row">
                         <td>
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <div class="user-info-container">
                                 <div>{{ attendee[3] }} {{ attendee[4] }}{% if attendee[2] is not none %} ({{ attendee[2] }}){% endif %}</div>
-                                <div class="mantimmar-fields-container" style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
-                                    <div style="display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;">
-                                        <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
+                                <div class="mantimmar-fields-container">
+                                    <div class="mantimmar-fields-row">
+                                        <label class="mantimmar-label">
                                             <span>INSATS:</span>
-                                            <input type="number" class="mantimmar-insats" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
+                                            <input type="number" class="mantimmar-insats mantimmar-input" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" value="0" min="0">
                                         </label>
-                                        <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
+                                        <label class="mantimmar-label">
                                             <span>BEVAKNING:</span>
-                                            <input type="number" class="mantimmar-bevakning" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
+                                            <input type="number" class="mantimmar-bevakning mantimmar-input" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" value="0" min="0">
                                         </label>
-                                        <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
+                                        <label class="mantimmar-label">
                                             <span>ÅTERSTÄLLNING:</span>
-                                            <input type="number" class="mantimmar-aterstallning" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
+                                            <input type="number" class="mantimmar-aterstallning mantimmar-input" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" value="0" min="0">
                                         </label>
                                     </div>
-                                    <span style="font-size: 0.7em; opacity: 0.8; margin-left: 4px; vertical-align: baseline;">|</span>
-                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                        <label style="display: flex; align-items: center; gap: 2px; font-size: 0.7em; margin-right: 12px;">
+                                    <span class="mantimmar-separator">|</span>
+                                    <div class="aa-radio-container">
+                                        <label class="mantimmar-label-center">
                                             <span>AA RÖKDYKNING:</span>
-                                            <input type="radio" name="aa_rokdykning_{{ attendee[0] }}_{{ dept[0] }}" value="true" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" style="margin: 0 2px; vertical-align: middle;">
+                                            <input type="radio" name="aa_rokdykning_{{ attendee[0] }}_{{ dept[0] }}" value="true" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" class="aa-radio">
                                             <span>Ja</span>
-                                            <input type="radio" name="aa_rokdykning_{{ attendee[0] }}_{{ dept[0] }}" value="false" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" checked style="margin: 0 2px; vertical-align: middle;">
+                                            <input type="radio" name="aa_rokdykning_{{ attendee[0] }}_{{ dept[0] }}" value="false" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" checked class="aa-radio">
                                             <span>Nej</span>
-                                            <input type="radio" name="aa_rokdykning_{{ attendee[0] }}_{{ dept[0] }}" value="null" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" style="margin: 0 2px; vertical-align: middle;">
+                                            <input type="radio" name="aa_rokdykning_{{ attendee[0] }}_{{ dept[0] }}" value="null" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" class="aa-radio">
                                             <span>N/A</span>
                                         </label>
-                                        <label style="display: flex; align-items: center; gap: 2px; font-size: 0.7em;">
+                                        <label class="mantimmar-label-center">
                                             <span>AA SJÄLVSKYDD:</span>
-                                            <input type="radio" name="aa_sjalvskydd_{{ attendee[0] }}_{{ dept[0] }}" value="true" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" style="margin: 0 2px; vertical-align: middle;">
+                                            <input type="radio" name="aa_sjalvskydd_{{ attendee[0] }}_{{ dept[0] }}" value="true" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" class="aa-radio">
                                             <span>Ja</span>
-                                            <input type="radio" name="aa_sjalvskydd_{{ attendee[0] }}_{{ dept[0] }}" value="false" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" checked style="margin: 0 2px; vertical-align: middle;">
+                                            <input type="radio" name="aa_sjalvskydd_{{ attendee[0] }}_{{ dept[0] }}" value="false" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" checked class="aa-radio">
                                             <span>Nej</span>
-                                            <input type="radio" name="aa_sjalvskydd_{{ attendee[0] }}_{{ dept[0] }}" value="null" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" style="margin: 0 2px; vertical-align: middle;">
+                                            <input type="radio" name="aa_sjalvskydd_{{ attendee[0] }}_{{ dept[0] }}" value="null" data-user-id="{{ attendee[0] }}" data-dept-id="{{ dept[0] }}" class="aa-radio">
                                             <span>N/A</span>
                                         </label>
                                     </div>
@@ -130,7 +130,7 @@
                                     data-user-id="{{ attendee[0] }}" 
                                     data-department-id="{{ dept[0] }}"
                                     draggable="false"
-                                    style="padding: 2px 6px; font-size: 0.8rem;">
+                                    class="remove-attendance-btn">
                                 Ta bort
                             </button>
                         </td>
@@ -145,21 +145,20 @@
             
             <!-- Cars section (only when alarm is closed for this department) -->
             {% if dept[3] and department_cars.get(dept[0]) %}
-            <div style="margin-top: 20px;">
+            <div class="cars-section">
                 <h4>Fordonstilldelning</h4>
-                <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Dra och släpp användare från tabellen ovan till fordonen nedan.</p>
-                <div class="cars-container" data-dept-id="{{ dept[0] }}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                <p class="cars-instruction">Dra och släpp användare från tabellen ovan till fordonen nedan.</p>
+                <div class="cars-container" data-dept-id="{{ dept[0] }}">
                     {% for car in department_cars[dept[0]] %}
-                    <div class="car-dropzone" data-car-code="{{ car[1] }}" data-dept-id="{{ dept[0] }}"
-                         style="border: 2px dashed #ccc; border-radius: 8px; padding: 15px; min-height: 100px; background: #f9f9f9;">
-                        <h4 style="margin: 0 0 10px 0;">{{ car[1] }}</h4>
-                        <div class="car-users" data-car-code="{{ car[1] }}" style="min-height: 50px;">
+                    <div class="car-dropzone" data-car-code="{{ car[1] }}" data-dept-id="{{ dept[0] }}">
+                        <h4>{{ car[1] }}</h4>
+                        <div class="car-users" data-car-code="{{ car[1] }}">
                             <!-- Users will be dropped here -->
                         </div>
                     </div>
                     {% endfor %}
                 </div>
-                <button type="button" class="save-car-assignments btn btn-primary" data-dept-id="{{ dept[0] }}" style="margin-top: 10px; float: right;">
+                <button type="button" class="save-car-assignments btn btn-primary" data-dept-id="{{ dept[0] }}">
                     Spara tilldelningar
                 </button>
             </div>
@@ -168,240 +167,35 @@
         {% endfor %}
         
         <!-- Modal for editing Mantimmar and AA on mobile -->
-        <div id="mantimmar-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
-            <div style="background: white; border-radius: 12px; padding: 24px; max-width: 95%; max-height: 90%; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.3); width: 100%; max-width: 420px;">
-                <h3 id="modal-user-name" style="margin-top: 0; margin-bottom: 24px; color: #000; font-size: 1.25rem; font-weight: 600; border-bottom: 2px solid #e0e0e0; padding-bottom: 12px;">Redigera Mantimmar och AA</h3>
-                <div id="modal-content" style="color: #000;">
+        <div id="mantimmar-modal">
+            <div class="modal-content-wrapper">
+                <h3 id="modal-user-name">Redigera Mantimmar och AA</h3>
+                <div id="modal-content">
                     <!-- Content will be populated by JavaScript -->
                 </div>
-                <div style="display: flex; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e0e0e0; justify-content: flex-end;">
-                    <button type="button" id="modal-cancel-btn" class="btn btn-secondary" style="padding: 12px 24px; font-size: 1rem; min-width: 100px;">Avbryt</button>
-                    <button type="button" id="modal-save-btn" class="btn btn-primary" style="padding: 12px 24px; font-size: 1rem; min-width: 100px;">Spara</button>
+                <div class="modal-actions">
+                    <button type="button" id="modal-cancel-btn" class="btn btn-secondary modal-btn">Avbryt</button>
+                    <button type="button" id="modal-save-btn" class="btn btn-primary modal-btn">Spara</button>
                 </div>
             </div>
         </div>
-        
-        <style>
-        .attendance-row {
-            transition: background-color 0.2s, opacity 0.2s;
-        }
-        
-        .attendance-row.dragging {
-            opacity: 0.5;
-        }
-        
-        table tr.attendance-row.assigned {
-            background-color: #28a745 !important;
-            color: white !important;
-        }
-        
-        table tr.attendance-row.assigned td {
-            background-color: #28a745 !important;
-            color: white !important;
-        }
-        
-        table tr.attendance-row.assigned button {
-            color: white !important;
-        }
-        
-        .car-dropzone.drag-over {
-            border-color: #007bff;
-            background: #e7f3ff;
-            transform: scale(1.02);
-        }
-        
-        /* Mobile responsive styles */
-        @media screen and (max-width: 768px) {
-            /* Ensure modal is hidden by default on mobile */
-            #mantimmar-modal {
-                display: none !important;
-            }
-            
-            /* Hide Mantimmar and AA fields on mobile - show only name, time, and remove button */
-            .attendance-row .mantimmar-fields-container {
-                display: none !important;
-            }
-            
-            /* Make rows clickable on mobile */
-            .attendance-row {
-                cursor: pointer;
-            }
-            
-            .attendance-row:active {
-                background-color: #f0f0f0;
-            }
-            
-            /* Show indicator that row is clickable */
-            .attendance-row td:first-child > div > div:first-child::after {
-                content: " 👆 Tryck för att redigera";
-                font-size: 0.7em;
-                color: #666;
-                margin-left: 8px;
-                display: block;
-                margin-top: 4px;
-            }
-            
-            /* Make table scrollable horizontally on very small screens */
-            .attendance-table-wrapper {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            /* Increase font sizes for better readability */
-            .attendance-row td {
-                font-size: 0.95rem;
-                padding: 12px 8px !important;
-            }
-            
-            /* Make name more prominent */
-            .attendance-row td > div > div:first-child {
-                font-size: 1rem;
-                font-weight: 500;
-            }
-            
-            /* Make remove button larger and easier to tap */
-            .attendance-row .remove-attendance {
-                padding: 10px 16px !important;
-                font-size: 0.9rem !important;
-                min-height: 44px; /* iOS recommended touch target */
-                min-width: 80px;
-            }
-            
-            /* Better spacing for time column */
-            .attendance-row td:nth-child(2) {
-                white-space: nowrap;
-                font-size: 0.9rem;
-                padding: 12px 8px !important;
-            }
-            
-            /* Make car dropzones stack on mobile */
-            .cars-container {
-                grid-template-columns: 1fr !important;
-            }
-            
-            /* Increase car dropzone padding */
-            .car-dropzone {
-                padding: 20px !important;
-                min-height: 120px !important;
-            }
-            
-            /* Make save button full width on mobile */
-            .save-car-assignments {
-                width: 100% !important;
-                float: none !important;
-                margin-top: 15px !important;
-                padding: 12px !important;
-                font-size: 1rem !important;
-            }
-            
-            /* Modal styles for mobile - only show when opened */
-            #mantimmar-modal > div {
-                width: 95%;
-                max-width: 420px;
-            }
-            
-            /* Ensure all modal text is black */
-            #mantimmar-modal,
-            #mantimmar-modal * {
-                color: #000 !important;
-            }
-            
-            #mantimmar-modal h3,
-            #mantimmar-modal h4 {
-                color: #000 !important;
-            }
-            
-            #mantimmar-modal span {
-                color: #000 !important;
-            }
-            
-            /* Make modal inputs larger and easier to tap */
-            #mantimmar-modal input[type="number"] {
-                width: 80px !important;
-                height: 44px !important;
-                font-size: 1rem !important;
-                padding: 8px !important;
-                border: 2px solid #ddd !important;
-                border-radius: 6px !important;
-                color: #000 !important;
-                background: #fff !important;
-            }
-            
-            #mantimmar-modal input[type="radio"] {
-                width: 20px !important;
-                height: 20px !important;
-                cursor: pointer;
-            }
-            
-            #mantimmar-modal label {
-                font-size: 1rem !important;
-                color: #000 !important;
-                cursor: pointer;
-            }
-            
-            #mantimmar-modal label span {
-                color: #000 !important;
-            }
-        }
-        
-        /* Desktop: hide modal by default */
-        @media screen and (min-width: 769px) {
-            #mantimmar-modal {
-                display: none !important;
-            }
-        }
-        
-        .car-users {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .car-user-item {
-            background: #28a745;
-            color: white;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .car-user-item .remove-from-car {
-            background: rgba(255, 255, 255, 0.3);
-            border: none;
-            color: white;
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.9em;
-            font-weight: bold;
-            line-height: 1;
-        }
-        
-        .car-user-item .remove-from-car:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-        </style>
         
         <!-- Edit Alarm Data Section -->
         {% if session.is_admin or session.role_07 or session.is_superadmin or session.is_md %}
         <hr>
         <h2>Redigera larmdata för rapportering</h2>
         <article>
-            <form id="alarm-edit-form" style="display: grid; gap: 15px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <form id="alarm-edit-form">
+                <div class="edit-form-row">
                     <div>
                         <label for="edit_what"><strong>Händelse/objekt *</strong></label>
                         <input type="text" id="edit_what" name="what" value="{{ alarm[7] or '' }}" 
-                               placeholder="T.ex. Brand i hus" style="width: 100%; padding: 8px;">
+                               placeholder="T.ex. Brand i hus" class="edit-form-full-width">
                     </div>
                     <div>
                         <label for="edit_where"><strong>Adress *</strong></label>
                         <input type="text" id="edit_where" name="where_location" value="{{ alarm[8] or '' }}" 
-                               placeholder="T.ex. Storgatan 1" style="width: 100%; padding: 8px;">
+                               placeholder="T.ex. Storgatan 1" class="edit-form-full-width">
                     </div>
                 </div>
                 
@@ -409,18 +203,18 @@
                 <div>
                     <label><strong>Enhetschef (07) *</strong></label>
             {% if who_was_07_data %}
-                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                    <div class="edit-form-flex-row">
                         <input type="text" id="who-was-07-display" 
                                value="{{ who_was_07_data.first_name }} {{ who_was_07_data.last_name }}{% if who_was_07_data.number %} ({{ who_was_07_data.number }}){% endif %}" 
-                               readonly style="flex: 1; padding: 8px; background: #f0f0f0;">
+                               readonly class="edit-form-readonly">
                         <input type="hidden" id="who-was-07-user-id" value="">
                 <button type="button" id="clear-who-was-07" class="btn btn-secondary">Rensa</button>
                         <button type="button" id="edit-who-was-07" class="btn btn-primary">Ändra</button>
             </div>
                     {% else %}
-                    <div class="search-section" style="margin-top: 5px;">
-                        <div class="search-container" style="display: flex; gap: 10px;">
-                            <input type="text" id="who-was-07-search" placeholder="Ange namn (t.ex. Robin) eller nummer (t.ex. 52)" autocomplete="off" style="flex: 1; padding: 8px;">
+                    <div class="search-section search-section-margin">
+                        <div class="search-container">
+                            <input type="text" id="who-was-07-search" placeholder="Ange namn (t.ex. Robin) eller nummer (t.ex. 52)" autocomplete="off" class="search-input-flex">
                     <input type="hidden" id="who-was-07-user-id">
                     <button type="button" id="save-who-was-07" class="btn btn-primary">Spara 07</button>
                 </div>
@@ -432,11 +226,11 @@
                 <!-- Rapportförfattare Section -->
                 <div>
                     <label><strong>Rapportförfattare *</strong></label>
-                    <div class="search-section" style="margin-top: 5px;">
-                        <div class="search-container" style="display: flex; gap: 10px;">
+                    <div class="search-section search-section-margin">
+                        <div class="search-container">
                             <input type="text" id="rapportforfattare-search" 
                                    value="{% if session.first_name %}{{ session.first_name }} {{ session.last_name }}{% endif %}" 
-                                   placeholder="Ange namn (t.ex. Robin) eller nummer (t.ex. 52)" autocomplete="off" style="flex: 1; padding: 8px;">
+                                   placeholder="Ange namn (t.ex. Robin) eller nummer (t.ex. 52)" autocomplete="off" class="search-input-flex">
                             <input type="hidden" id="rapportforfattare-user-id" value="{{ session.user_id }}">
                         </div>
                         <div id="rapportforfattare-results" class="search-results"></div>
@@ -446,7 +240,7 @@
                 <!-- Larmtyp Section -->
                 <div>
                     <label for="edit_larmtyp"><strong>Larmtyp *</strong></label>
-                    <select id="edit_larmtyp" name="larmtyp" style="width: 100%; padding: 8px;">
+                    <select id="edit_larmtyp" name="larmtyp" class="full-width">
                         <option value="">- Välj ett värde -</option>
                         <option value="400 Personsökaralarm">400 Personsökaralarm</option>
                         <option value="401 Personsökaralarm - Hissalarm">401 Personsökaralarm - Hissalarm</option>
@@ -482,7 +276,7 @@
                 <!-- Räddningsledare Section -->
                 <div>
                     <label for="raddningsledare-select"><strong>Räddningsledare *</strong></label>
-                    <select id="raddningsledare-select" name="raddningsledare" style="width: 100%; padding: 8px;">
+                    <select id="raddningsledare-select" name="raddningsledare" class="full-width">
                         <option value="">- Välj ett värde -</option>
                         <option value="John Anderson">John Anderson</option>
                         <option value="Sarah Johnson">Sarah Johnson</option>
@@ -504,7 +298,7 @@
                 <div>
                     <label for="edit_email"><strong>E-post *</strong></label>
                     <input type="email" id="edit_email" name="email" value="" 
-                           placeholder="t.ex. namn@example.com" style="width: 100%; padding: 8px;">
+                           placeholder="t.ex. namn@example.com" class="edit-form-full-width">
             </div>
                 
                 <!-- Beskrivning av händelse och vidtagna åtgärder (separate comment field) -->
@@ -512,10 +306,10 @@
                     <label for="beskrivning-text"><strong>Beskrivning av händelse och vidtagna åtgärder</strong></label>
                     <textarea id="beskrivning-text" name="beskrivning" rows="6" 
                               placeholder="Beskrivning av händelse och vidtagna åtgärder..." 
-                              style="width: 100%; padding: 8px;"></textarea>
+                              class="full-width"></textarea>
         </div>
                 
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                <div class="form-actions-flex">
                     <button type="button" id="save-all-data" class="btn btn-primary">
                         Spara ändringar
                     </button>
@@ -544,7 +338,7 @@
             {% endif %}
             <div class="bottom-button-right">
                 <a href="{{ url_for('export_alarm_comprehensive', alarm_id=alarm[0]) }}" 
-                   class="btn btn-primary" style="padding: 10px 20px; font-size: 1.1rem;">
+                   class="btn btn-primary btn-large">
                     📊 Exportera allt
                 </a>
             </div>
@@ -870,40 +664,44 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                                 row.innerHTML = `
                                     <td>
-                                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <div class="user-info-container">
                                             <div>${name}${number}</div>
-                                            <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
-                                                <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
-                                                    <span>INSATS:</span>
-                                                    <input type="number" class="mantimmar-insats" data-user-id="${userId}" data-dept-id="${deptId}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
-                                                </label>
-                                                <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
-                                                    <span>BEVAKNING:</span>
-                                                    <input type="number" class="mantimmar-bevakning" data-user-id="${userId}" data-dept-id="${deptId}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
-                                                </label>
-                                                <label style="display: flex; align-items: baseline; gap: 2px; font-size: 0.7em;">
-                                                    <span>ÅTERSTÄLLNING:</span>
-                                                    <input type="number" class="mantimmar-aterstallning" data-user-id="${userId}" data-dept-id="${deptId}" value="0" min="0" style="width: 40px; height: 20px; padding: 0 3px; border-radius: 2px; border: 1px solid #ccc; font-size: 0.85em; line-height: 1; vertical-align: baseline;">
-                                                </label>
-                                                <span style="font-size: 0.7em; opacity: 0.8; margin-left: 4px; vertical-align: baseline;">|</span>
-                                                <label style="display: flex; align-items: center; gap: 2px; font-size: 0.7em; margin-right: 12px;">
-                                                    <span>AA RÖKDYKNING:</span>
-                                                    <input type="radio" name="aa_rokdykning_${userId}_${deptId}" value="true" data-user-id="${userId}" data-dept-id="${deptId}" style="margin: 0 2px; vertical-align: middle;">
-                                                    <span>Ja</span>
-                                                    <input type="radio" name="aa_rokdykning_${userId}_${deptId}" value="false" data-user-id="${userId}" data-dept-id="${deptId}" checked style="margin: 0 2px; vertical-align: middle;">
-                                                    <span>Nej</span>
-                                                    <input type="radio" name="aa_rokdykning_${userId}_${deptId}" value="null" data-user-id="${userId}" data-dept-id="${deptId}" style="margin: 0 2px; vertical-align: middle;">
-                                                    <span>N/A</span>
-                                                </label>
-                                                <label style="display: flex; align-items: center; gap: 2px; font-size: 0.7em;">
-                                                    <span>AA SJÄLVSKYDD:</span>
-                                                    <input type="radio" name="aa_sjalvskydd_${userId}_${deptId}" value="true" data-user-id="${userId}" data-dept-id="${deptId}" style="margin: 0 2px; vertical-align: middle;">
-                                                    <span>Ja</span>
-                                                    <input type="radio" name="aa_sjalvskydd_${userId}_${deptId}" value="false" data-user-id="${userId}" data-dept-id="${deptId}" checked style="margin: 0 2px; vertical-align: middle;">
-                                                    <span>Nej</span>
-                                                    <input type="radio" name="aa_sjalvskydd_${userId}_${deptId}" value="null" data-user-id="${userId}" data-dept-id="${deptId}" style="margin: 0 2px; vertical-align: middle;">
-                                                    <span>N/A</span>
-                                                </label>
+                                            <div class="mantimmar-fields-container">
+                                                <div class="mantimmar-fields-row">
+                                                    <label class="mantimmar-label">
+                                                        <span>INSATS:</span>
+                                                        <input type="number" class="mantimmar-insats mantimmar-input" data-user-id="${userId}" data-dept-id="${deptId}" value="0" min="0">
+                                                    </label>
+                                                    <label class="mantimmar-label">
+                                                        <span>BEVAKNING:</span>
+                                                        <input type="number" class="mantimmar-bevakning mantimmar-input" data-user-id="${userId}" data-dept-id="${deptId}" value="0" min="0">
+                                                    </label>
+                                                    <label class="mantimmar-label">
+                                                        <span>ÅTERSTÄLLNING:</span>
+                                                        <input type="number" class="mantimmar-aterstallning mantimmar-input" data-user-id="${userId}" data-dept-id="${deptId}" value="0" min="0">
+                                                    </label>
+                                                </div>
+                                                <span class="mantimmar-separator">|</span>
+                                                <div class="aa-radio-container">
+                                                    <label class="mantimmar-label-center">
+                                                        <span>AA RÖKDYKNING:</span>
+                                                        <input type="radio" name="aa_rokdykning_${userId}_${deptId}" value="true" data-user-id="${userId}" data-dept-id="${deptId}" class="aa-radio">
+                                                        <span>Ja</span>
+                                                        <input type="radio" name="aa_rokdykning_${userId}_${deptId}" value="false" data-user-id="${userId}" data-dept-id="${deptId}" checked class="aa-radio">
+                                                        <span>Nej</span>
+                                                        <input type="radio" name="aa_rokdykning_${userId}_${deptId}" value="null" data-user-id="${userId}" data-dept-id="${deptId}" class="aa-radio">
+                                                        <span>N/A</span>
+                                                    </label>
+                                                    <label class="mantimmar-label-center">
+                                                        <span>AA SJÄLVSKYDD:</span>
+                                                        <input type="radio" name="aa_sjalvskydd_${userId}_${deptId}" value="true" data-user-id="${userId}" data-dept-id="${deptId}" class="aa-radio">
+                                                        <span>Ja</span>
+                                                        <input type="radio" name="aa_sjalvskydd_${userId}_${deptId}" value="false" data-user-id="${userId}" data-dept-id="${deptId}" checked class="aa-radio">
+                                                        <span>Nej</span>
+                                                        <input type="radio" name="aa_sjalvskydd_${userId}_${deptId}" value="null" data-user-id="${userId}" data-dept-id="${deptId}" class="aa-radio">
+                                                        <span>N/A</span>
+                                                    </label>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -913,7 +711,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 data-user-id="${userId}" 
                                                 data-department-id="${deptId}"
                                                 draggable="false"
-                                                style="padding: 2px 6px; font-size: 0.8rem;"
+                                                class="remove-attendance-btn"
                                                 onclick="removeAttendance('${userId}', '${deptId}')">Ta bort</button>
                                     </td>
                                 `;
@@ -1740,54 +1538,54 @@ document.addEventListener('DOMContentLoaded', function() {
         // Populate modal content
         const modalContent = document.getElementById('modal-content');
         modalContent.innerHTML = `
-            <div style="display: flex; flex-direction: column; gap: 24px;">
+            <div class="modal-content-layout">
                 <div>
                     <h4 style="margin: 0 0 16px 0; color: #000; font-size: 1.1rem; font-weight: 600;">Mantimmar</h4>
-                    <div style="display: flex; flex-direction: column; gap: 16px;">
-                        <label style="display: flex; align-items: center; justify-content: space-between; color: #000; font-size: 1rem;">
-                            <span style="font-weight: 500;">INSATS:</span>
-                            <input type="number" id="modal-mantimmar-insats" value="${mantimmarInsats}" min="0" style="width: 80px; height: 44px; padding: 8px; font-size: 1rem; text-align: center; border: 2px solid #ddd; border-radius: 6px; color: #000; background: #fff;">
+                    <div class="modal-section">
+                        <label class="modal-label-row">
+                            <span>INSATS:</span>
+                            <input type="number" id="modal-mantimmar-insats" value="${mantimmarInsats}" min="0" class="modal-input-large">
                         </label>
-                        <label style="display: flex; align-items: center; justify-content: space-between; color: #000; font-size: 1rem;">
-                            <span style="font-weight: 500;">BEVAKNING:</span>
-                            <input type="number" id="modal-mantimmar-bevakning" value="${mantimmarBevakning}" min="0" style="width: 80px; height: 44px; padding: 8px; font-size: 1rem; text-align: center; border: 2px solid #ddd; border-radius: 6px; color: #000; background: #fff;">
+                        <label class="modal-label-row">
+                            <span>BEVAKNING:</span>
+                            <input type="number" id="modal-mantimmar-bevakning" value="${mantimmarBevakning}" min="0" class="modal-input-large">
                         </label>
-                        <label style="display: flex; align-items: center; justify-content: space-between; color: #000; font-size: 1rem;">
-                            <span style="font-weight: 500;">ÅTERSTÄLLNING:</span>
-                            <input type="number" id="modal-mantimmar-aterstallning" value="${mantimmarAterstallning}" min="0" style="width: 80px; height: 44px; padding: 8px; font-size: 1rem; text-align: center; border: 2px solid #ddd; border-radius: 6px; color: #000; background: #fff;">
+                        <label class="modal-label-row">
+                            <span>ÅTERSTÄLLNING:</span>
+                            <input type="number" id="modal-mantimmar-aterstallning" value="${mantimmarAterstallning}" min="0" class="modal-input-large">
                         </label>
                     </div>
                 </div>
                 <div>
                     <h4 style="margin: 0 0 16px 0; color: #000; font-size: 1.1rem; font-weight: 600;">AA RÖKDYKNING</h4>
-                    <div style="display: flex; gap: 24px; flex-wrap: wrap;">
-                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
-                            <input type="radio" name="modal-aa-rokdykning" value="true" ${aaRokdykningValue === 'true' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                    <div class="modal-radio-group">
+                        <label class="modal-radio-label">
+                            <input type="radio" name="modal-aa-rokdykning" value="true" ${aaRokdykningValue === 'true' ? 'checked' : ''} class="modal-radio-input">
                             <span>Ja</span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
-                            <input type="radio" name="modal-aa-rokdykning" value="false" ${aaRokdykningValue === 'false' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                        <label class="modal-radio-label">
+                            <input type="radio" name="modal-aa-rokdykning" value="false" ${aaRokdykningValue === 'false' ? 'checked' : ''} class="modal-radio-input">
                             <span>Nej</span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
-                            <input type="radio" name="modal-aa-rokdykning" value="null" ${aaRokdykningValue === 'null' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                        <label class="modal-radio-label">
+                            <input type="radio" name="modal-aa-rokdykning" value="null" ${aaRokdykningValue === 'null' ? 'checked' : ''} class="modal-radio-input">
                             <span>N/A</span>
                         </label>
                     </div>
                 </div>
                 <div>
                     <h4 style="margin: 0 0 16px 0; color: #000; font-size: 1.1rem; font-weight: 600;">AA SJÄLVSKYDD</h4>
-                    <div style="display: flex; gap: 24px; flex-wrap: wrap;">
-                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
-                            <input type="radio" name="modal-aa-sjalvskydd" value="true" ${aaSjalvskyddValue === 'true' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                    <div class="modal-radio-group">
+                        <label class="modal-radio-label">
+                            <input type="radio" name="modal-aa-sjalvskydd" value="true" ${aaSjalvskyddValue === 'true' ? 'checked' : ''} class="modal-radio-input">
                             <span>Ja</span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
-                            <input type="radio" name="modal-aa-sjalvskydd" value="false" ${aaSjalvskyddValue === 'false' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                        <label class="modal-radio-label">
+                            <input type="radio" name="modal-aa-sjalvskydd" value="false" ${aaSjalvskyddValue === 'false' ? 'checked' : ''} class="modal-radio-input">
                             <span>Nej</span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 8px; color: #000; font-size: 1rem; cursor: pointer;">
-                            <input type="radio" name="modal-aa-sjalvskydd" value="null" ${aaSjalvskyddValue === 'null' ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                        <label class="modal-radio-label">
+                            <input type="radio" name="modal-aa-sjalvskydd" value="null" ${aaSjalvskyddValue === 'null' ? 'checked' : ''} class="modal-radio-input">
                             <span>N/A</span>
                         </label>
                     </div>
@@ -2292,7 +2090,7 @@ document.addEventListener('DOMContentLoaded', function() {
             searchSection.className = 'search-section';
             searchSection.style.marginTop = '5px';
             searchSection.innerHTML = `
-                <div class="search-container" style="display: flex; gap: 10px;">
+                <div class="search-container">
                     <input type="text" id="who-was-07-search" placeholder="Ange namn (t.ex. Robin) eller nummer (t.ex. 52)" autocomplete="off" style="flex: 1; padding: 8px;">
                     <input type="hidden" id="who-was-07-user-id">
                     <button type="button" id="save-who-was-07" class="btn btn-primary">Spara 07</button>

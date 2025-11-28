@@ -57,6 +57,18 @@
     border: 1px solid #f5c6cb;
 }
 
+.status-message {
+    display: none;
+}
+
+.status-message.show {
+    display: block;
+}
+
+.nfc-back-link {
+    margin-top: 2rem;
+}
+
 .status-info {
     background-color: #d1ecf1;
     color: #0c5460;

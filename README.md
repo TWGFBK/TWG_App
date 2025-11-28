@@ -2,6 +2,8 @@
 
 A mobile-first attendance reporting system for emergency response organizations, fire departments, and similar organizations using Flask and PostgreSQL.
 
+![Alarm Documentation](Img/larmdocumentation1PC.png)
+
 ## Features
 
 - **Mobile-first design** with clean, responsive UI
@@ -95,16 +97,28 @@ The seed data includes these test users:
 3. **Manual Attendance**: Click "Markera närvaro" (Mark Attendance) for specific alarms if needed
 4. **View Details**: Click "Visa detaljer" (View Details) to see attendance lists
 
+#### Mobile Interface
+
+![Incoming Alarm - Mobile](Img/Inkommet_larm_mobil.png)
+
+![Incoming Alarm - Mobile with Multiple Vehicles](Img/Inkommet_larm_mobil_fler_kar.png)
+
 ### For Administrators
 
 1. **Manage Users**: Create users, assign departments and roles
    - **Search Users**: Search for users by ID to add them to your departments
    - **Edit Users**: Update user information, roles, and department assignments
    - **User Cards**: Modern card-based interface for easy user management
+
+![User Management Interface](Img/User_list.png)
+
 2. **Manage Tags**: Create and revoke NFC tags for users
 3. **Manage Alarms**: Create real/test/practice alarms, assign departments
    - **Alarm Cards**: Modern card-based interface showing alarm details
    - **Sort Controls**: Sort alarms by time, type, or status
+
+![Alarm List](Img/Larmlista.png)
+
 4. **Export Data**: Download CSV reports with attendance data
 
 ## NFC Integration
@@ -197,6 +211,14 @@ The system includes SMS gateway integration for automatic alarm creation:
 - **Multiple Formats**: Supports various SMS message formats (see `app/sms/parser.py`)
 
 For detailed SMS integration documentation, see [app/sms/README.md](app/sms/README.md).
+
+### Alarm Documentation
+
+![Alarm Documentation 1](Img/larmdocumentation.png)
+
+![Alarm Documentation 2](Img/larmdocumentation2.png)
+
+![Alarm Documentation 3](Img/larmdocumentation3.png)
 
 ## Customization
 

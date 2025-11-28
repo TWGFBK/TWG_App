@@ -472,3 +472,532 @@ table th {
         justify-content: center !important;
     }
 }
+
+/* Department header flex layout */
+.dept-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* Draggable row styles */
+.draggable-row {
+    cursor: move;
+    transition: background-color 0.2s;
+}
+
+/* User info container */
+.user-info-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Mantimmar fields container */
+.mantimmar-fields-container {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mantimmar-fields-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Mantimmar label styles */
+.mantimmar-label {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    font-size: 0.7em;
+}
+
+.mantimmar-label-center {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.7em;
+    margin-right: 12px;
+}
+
+/* Mantimmar input styles */
+.mantimmar-input {
+    width: 40px;
+    height: 20px;
+    padding: 0 3px;
+    border-radius: 2px;
+    border: 1px solid #ccc;
+    font-size: 0.85em;
+    line-height: 1;
+    vertical-align: baseline;
+}
+
+/* Mantimmar separator */
+.mantimmar-separator {
+    font-size: 0.7em;
+    opacity: 0.8;
+    margin-left: 4px;
+    vertical-align: baseline;
+}
+
+/* AA radio container */
+.aa-radio-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Radio button styles */
+.aa-radio {
+    margin: 0 2px;
+    vertical-align: middle;
+}
+
+/* Remove button styles */
+.remove-attendance-btn {
+    padding: 2px 6px;
+    font-size: 0.8rem;
+}
+
+/* Cars section */
+.cars-section {
+    margin-top: 20px;
+}
+
+.cars-instruction {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.cars-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.car-dropzone {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 15px;
+    min-height: 100px;
+    background: #f9f9f9;
+}
+
+.car-dropzone h4 {
+    margin: 0 0 10px 0;
+}
+
+.car-users {
+    min-height: 50px;
+}
+
+.save-car-assignments {
+    margin-top: 10px;
+    float: right;
+}
+
+/* Mantimmar modal */
+#mantimmar-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#mantimmar-modal.show {
+    display: flex;
+}
+
+.modal-content-wrapper {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 95%;
+    max-height: 90%;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 420px;
+}
+
+#modal-user-name {
+    margin-top: 0;
+    margin-bottom: 24px;
+    color: #000;
+    font-size: 1.25rem;
+    font-weight: 600;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 12px;
+}
+
+#modal-content {
+    color: #000;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    min-width: 100px;
+}
+
+/* Alarm edit form */
+#alarm-edit-form {
+    display: grid;
+    gap: 15px;
+}
+
+.edit-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.edit-form-full-width {
+    width: 100%;
+    padding: 8px;
+}
+
+.edit-form-flex-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.edit-form-readonly {
+    flex: 1;
+    padding: 8px;
+    background: #f0f0f0;
+}
+
+.search-section-margin {
+    margin-top: 5px;
+}
+
+.search-input-flex {
+    flex: 1;
+    padding: 8px;
+}
+
+/* Select styles */
+select.full-width {
+    width: 100%;
+    padding: 8px;
+}
+
+/* Textarea styles */
+textarea.full-width {
+    width: 100%;
+    padding: 8px;
+}
+
+/* Form actions */
+.form-actions-flex {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* Large button */
+.btn-large {
+    padding: 10px 20px;
+    font-size: 1.1rem;
+}
+
+/* User result clickable */
+.user-result-clickable {
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin: 5px 0;
+    border-radius: 4px;
+}
+
+/* Attendance row styles */
+.attendance-row {
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.attendance-row.dragging {
+    opacity: 0.5;
+}
+
+table tr.attendance-row.assigned {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+
+table tr.attendance-row.assigned td {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+
+table tr.attendance-row.assigned button {
+    color: white !important;
+}
+
+.car-dropzone.drag-over {
+    border-color: #007bff;
+    background: #e7f3ff;
+    transform: scale(1.02);
+}
+
+/* Car users container */
+.car-users {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.car-user-item {
+    background: #28a745;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.car-user-item .remove-from-car {
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.9em;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.car-user-item .remove-from-car:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile responsive styles */
+@media screen and (max-width: 768px) {
+    /* Ensure modal is hidden by default on mobile */
+    #mantimmar-modal {
+        display: none !important;
+    }
+    
+    /* Hide Mantimmar and AA fields on mobile - show only name, time, and remove button */
+    .attendance-row .mantimmar-fields-container {
+        display: none !important;
+    }
+    
+    /* Make rows clickable on mobile */
+    .attendance-row {
+        cursor: pointer;
+    }
+    
+    .attendance-row:active {
+        background-color: #f0f0f0;
+    }
+    
+    /* Show indicator that row is clickable */
+    .attendance-row td:first-child > div > div:first-child::after {
+        content: " 👆 Tryck för att redigera";
+        font-size: 0.7em;
+        color: #666;
+        margin-left: 8px;
+        display: block;
+        margin-top: 4px;
+    }
+    
+    /* Make table scrollable horizontally on very small screens */
+    .attendance-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Increase font sizes for better readability */
+    .attendance-row td {
+        font-size: 0.95rem;
+        padding: 12px 8px !important;
+    }
+    
+    /* Make name more prominent */
+    .attendance-row td > div > div:first-child {
+        font-size: 1rem;
+        font-weight: 500;
+    }
+    
+    /* Make remove button larger and easier to tap */
+    .attendance-row .remove-attendance {
+        padding: 10px 16px !important;
+        font-size: 0.9rem !important;
+        min-height: 44px; /* iOS recommended touch target */
+        min-width: 80px;
+    }
+    
+    /* Better spacing for time column */
+    .attendance-row td:nth-child(2) {
+        white-space: nowrap;
+        font-size: 0.9rem;
+        padding: 12px 8px !important;
+    }
+    
+    /* Make car dropzones stack on mobile */
+    .cars-container {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Increase car dropzone padding */
+    .car-dropzone {
+        padding: 20px !important;
+        min-height: 120px !important;
+    }
+    
+    /* Make save button full width on mobile */
+    .save-car-assignments {
+        width: 100% !important;
+        float: none !important;
+        margin-top: 15px !important;
+        padding: 12px !important;
+        font-size: 1rem !important;
+    }
+    
+    /* Modal styles for mobile - only show when opened */
+    #mantimmar-modal > div {
+        width: 95%;
+        max-width: 420px;
+    }
+    
+    /* Ensure all modal text is black */
+    #mantimmar-modal,
+    #mantimmar-modal * {
+        color: #000 !important;
+    }
+    
+    #mantimmar-modal h3,
+    #mantimmar-modal h4 {
+        color: #000 !important;
+    }
+    
+    #mantimmar-modal span {
+        color: #000 !important;
+    }
+    
+    /* Make modal inputs larger and easier to tap */
+    #mantimmar-modal input[type="number"] {
+        width: 80px !important;
+        height: 44px !important;
+        font-size: 1rem !important;
+        padding: 8px !important;
+        border: 2px solid #ddd !important;
+        border-radius: 6px !important;
+        color: #000 !important;
+        background: #fff !important;
+    }
+    
+    #mantimmar-modal input[type="radio"] {
+        width: 20px !important;
+        height: 20px !important;
+        cursor: pointer;
+    }
+    
+    #mantimmar-modal label {
+        font-size: 1rem !important;
+        color: #000 !important;
+        cursor: pointer;
+    }
+    
+    #mantimmar-modal label span {
+        color: #000 !important;
+    }
+}
+
+/* Desktop: hide modal by default */
+@media screen and (min-width: 769px) {
+    #mantimmar-modal {
+        display: none !important;
+    }
+}
+
+/* Modal content layout */
+.modal-content-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.modal-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #000;
+    font-size: 1rem;
+}
+
+.modal-label-row span {
+    font-weight: 500;
+}
+
+.modal-input-large {
+    width: 80px;
+    height: 44px;
+    padding: 8px;
+    font-size: 1rem;
+    text-align: center;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    color: #000;
+    background: #fff;
+}
+
+.modal-radio-group {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.modal-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #000;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.modal-radio-input {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}

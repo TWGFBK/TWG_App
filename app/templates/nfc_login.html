@@ -18,14 +18,14 @@
                autocomplete="off">
     </div>
 
-    <div id="statusMessage" class="status-message" style="display: none;"></div>
+    <div id="statusMessage" class="status-message"></div>
     
     <div class="loading" id="loading">
         <div class="spinner"></div>
         <p>Bearbetar...</p>
     </div>
 
-    <div style="margin-top: 2rem;">
+    <div class="nfc-back-link">
         <a href="/" class="secondary">Tillbaka till inloggning</a>
     </div>
 </div>
@@ -121,13 +121,12 @@ function processTag(tagId) {
 function showStatus(message, type) {
     const statusDiv = document.getElementById('statusMessage');
     statusDiv.textContent = message;
-    statusDiv.className = `status-message status-${type}`;
-    statusDiv.style.display = 'block';
+    statusDiv.className = `status-message status-${type} show`;
 }
 
 function hideStatus() {
     const statusDiv = document.getElementById('statusMessage');
-    statusDiv.style.display = 'none';
+    statusDiv.classList.remove('show');
 }
 
 function showLoading(show) {

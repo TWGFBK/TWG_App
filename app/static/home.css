@@ -6,6 +6,16 @@
     margin-top: 20px;
 }
 
+/* Location paragraph margin */
+.location-margin {
+    margin-top: 10px;
+}
+
+/* Time buttons margin */
+.time-buttons-margin {
+    margin-top: 10px;
+}
+
 .response-options {
     margin: 15px 0;
 }
